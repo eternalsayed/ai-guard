@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentScope — Monitor every AI coding agent on your machine</title>
+<title>AIGuard — Monitor every AI coding agent on your machine</title>
 <meta name="description" content="Real-time monitoring for Claude Code, Codex, Gemini CLI, Aider, and more. Surfaces rogue permissions, background daemons, and unexpected network connections — entirely on your machine.">
 
 <!-- Analytics: swap in your preferred privacy-respecting provider -->
@@ -219,7 +219,7 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
 <nav>
   <a href="/" class="nav-logo" style="text-decoration:none">
     <span class="nav-logo-dot"></span>
-    AgentScope
+    AIGuard
   </a>
   <div class="nav-links">
     <a href="#features" class="nav-link">Features</a>
@@ -239,7 +239,7 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
 
   <h1>One dashboard for<br><em>every AI coding agent.</em></h1>
   <p class="hero-sub">
-    AgentScope monitors Claude Code, Codex, Gemini CLI, Aider, and more — surfacing rogue permissions, background daemons, and unexpected network connections before they cause damage.
+    AIGuard monitors Claude Code, Codex, Gemini CLI, Aider, and more — surfacing rogue permissions, background daemons, and unexpected network connections before they cause damage.
   </p>
 
   <div class="hero-actions">
@@ -257,10 +257,10 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
         <span class="t-dot red"></span>
         <span class="t-dot yellow"></span>
         <span class="t-dot green"></span>
-        <span class="terminal-title">AgentScope — localhost:4242</span>
+        <span class="terminal-title">AIGuard — localhost:4242</span>
       </div>
       <div class="terminal-body">
-        <div><span class="t-green t-bold">AgentScope</span> <span class="t-muted">v1.0.0</span> <span class="t-dim">·</span> <span class="t-muted">agent running</span> <span class="t-green">●</span></div>
+        <div><span class="t-green t-bold">AIGuard</span> <span class="t-muted">v1.0.0</span> <span class="t-dim">·</span> <span class="t-muted">agent running</span> <span class="t-green">●</span></div>
         <div class="t-dim">──────────────────────────────────────────────────────</div>
         <div><span class="t-red t-bold">[!]</span> <span class="t-bold">3 alerts</span></div>
         <div>&nbsp;</div>
@@ -329,7 +329,7 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
     <div class="step">
       <div class="step-num">1</div>
       <h3>Install the agent</h3>
-      <p>Run one command. It downloads a 15 KB Node.js agent to <code>~/.agentscope/</code>, starts it in the background, and registers it with launchd (macOS) or systemd (Linux) so it restarts on login.</p>
+      <p>Run one command. It downloads a 15 KB Node.js agent to <code>~/.aiguard/</code>, starts it in the background, and registers it with launchd (macOS) or systemd (Linux) so it restarts on login.</p>
     </div>
     <div class="step">
       <div class="step-num">2</div>
@@ -343,9 +343,9 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
     </div>
   </div>
 
-  <div class="arch-diagram"><span class="t-muted">┌── agentscope.netlify.app ──────────┐         ┌── Your machine ────────────────────────────┐
+  <div class="arch-diagram"><span class="t-muted">┌── aiguard.netlify.app ──────────┐         ┌── Your machine ────────────────────────────┐
 │                                    │         │                                            │
-│  Static HTML / CSS / JS            │   SSE   │  ~/.agentscope/agent.js                   │
+│  Static HTML / CSS / JS            │   SSE   │  ~/.aiguard/agent.js                   │
 │                                    │◄────────┤  └─ listens on 127.0.0.1:4242            │
 │  Browser renders the dashboard     │         │     reads: ~/.claude/, ~/.gemini/,         │
 │                                    │         │            ~/.codex/, ps aux, lsof -i     │
@@ -405,12 +405,12 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
     <div class="agent-card">
       <h3>Resource footprint</h3>
       <div class="fp-list">
-        <div class="fp-row"><span class="fp-l">Disk</span>     <span class="fp-v">~15 KB</span>        <span class="fp-n">single file in <code>~/.agentscope/</code></span></div>
+        <div class="fp-row"><span class="fp-l">Disk</span>     <span class="fp-v">~15 KB</span>        <span class="fp-n">single file in <code>~/.aiguard/</code></span></div>
         <div class="fp-row"><span class="fp-l">RAM</span>      <span class="fp-v">35–50 MB</span>      <span class="fp-n">Node.js process baseline; no growth</span></div>
         <div class="fp-row"><span class="fp-l">CPU idle</span> <span class="fp-v">&lt;0.1%</span>      <span class="fp-n">nothing happens when no browser is open</span></div>
         <div class="fp-row"><span class="fp-l">CPU active</span><span class="fp-v">~1–2%</span>        <span class="fp-n">brief spike every 5 s when you're on the dashboard</span></div>
         <div class="fp-row"><span class="fp-l">Port</span>     <span class="fp-v">4242</span>          <span class="fp-n">127.0.0.1 only — not reachable from the internet</span></div>
-        <div class="fp-row"><span class="fp-l">Log file</span> <span class="fp-v">grows</span>        <span class="fp-n"><code>~/.agentscope/agent.log</code> — delete anytime</span></div>
+        <div class="fp-row"><span class="fp-l">Log file</span> <span class="fp-v">grows</span>        <span class="fp-n"><code>~/.aiguard/agent.log</code> — delete anytime</span></div>
         <div class="fp-row"><span class="fp-l">Outbound</span> <span class="fp-v">1 req/hr</span>      <span class="fp-n">version check to <code>/version.json</code> only</span></div>
       </div>
     </div>
@@ -431,23 +431,31 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
       <h3>You stay in control</h3>
       <div class="ctrl-list">
         <div class="ctrl-item">
-          <h4>Check it's running</h4>
-          <code>cat ~/.agentscope/agent.pid | xargs ps -p</code>
+          <h4>Status</h4>
+          <code>as-status</code>
         </div>
         <div class="ctrl-item">
-          <h4>Tail the log</h4>
-          <code>tail -f ~/.agentscope/agent.log</code>
+          <h4>Tail logs</h4>
+          <code>as-log</code>
         </div>
         <div class="ctrl-item">
           <h4>Stop</h4>
-          <code>kill $(cat ~/.agentscope/agent.pid)</code>
+          <code>as-stop</code>
+        </div>
+        <div class="ctrl-item">
+          <h4>Restart</h4>
+          <code>as-restart</code>
+        </div>
+        <div class="ctrl-item">
+          <h4>Update agent</h4>
+          <code>as-update</code>
         </div>
         <div class="ctrl-item">
           <h4>Full uninstall</h4>
-          <code>kill $(cat ~/.agentscope/agent.pid) &amp;&amp; rm -rf ~/.agentscope</code>
+          <code>as-stop &amp;&amp; rm -rf ~/.aiguard</code>
         </div>
       </div>
-      <p class="ctrl-note">The agent does <strong>not</strong> auto-start after a reboot. The installer starts it once for the current session. Re-run the installer to start it again, or manually enable the launchd / systemd service.</p>
+      <p class="ctrl-note">The installer adds <code>as-*</code> aliases to your shell rc. The agent does <strong>not</strong> auto-start after a reboot — run <code>as-start</code> or re-run the installer.</p>
     </div>
 
   </div>
@@ -497,7 +505,7 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
 
 <!-- ── Footer ────────────────────────────────────────────────────────────── -->
 <footer>
-  <div class="footer-left"><span>AgentScope</span> — MIT License</div>
+  <div class="footer-left"><span>AIGuard</span> — MIT License</div>
   <div class="footer-links">
     <a href="#how-it-works">How it works</a>
     <a href="#features">Features</a>

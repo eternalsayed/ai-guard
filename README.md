@@ -1,4 +1,4 @@
-# AgentScope
+# AIGuard
 
 Real-time monitoring for every AI coding agent on your machine — Claude Code, Codex, Gemini CLI, Aider, Cursor, and more.
 
@@ -36,8 +36,8 @@ The agent is a **single Node.js file (~15 KB)** with zero npm dependencies. Here
 **The agent does NOT auto-start after a reboot.** The installer runs it once for the current session. To start it again after a reboot, re-run the installer or manually start it:
 
 ```bash
-PORT=4242 AGENTSCOPE_HOST=https://your-site.netlify.app \
-  nohup node ~/.agentscope/agent.js >> ~/.agentscope/agent.log 2>&1 &
+PORT=4242 AIGUARD_HOST=https://your-site.netlify.app \
+  nohup node ~/.aiguard/agent.js >> ~/.aiguard/agent.log 2>&1 &
 ```
 
 ### What it reads
@@ -61,22 +61,22 @@ PORT=4242 AGENTSCOPE_HOST=https://your-site.netlify.app \
 
 ```bash
 # Check if running
-cat ~/.agentscope/agent.pid | xargs ps -p
+cat ~/.aiguard/agent.pid | xargs ps -p
 
 # Tail the log
-tail -f ~/.agentscope/agent.log
+tail -f ~/.aiguard/agent.log
 
 # Stop
-kill $(cat ~/.agentscope/agent.pid)
+kill $(cat ~/.aiguard/agent.pid)
 
 # Full uninstall
-kill $(cat ~/.agentscope/agent.pid) 2>/dev/null
-rm -rf ~/.agentscope
+kill $(cat ~/.aiguard/agent.pid) 2>/dev/null
+rm -rf ~/.aiguard
 # macOS:
-rm ~/Library/LaunchAgents/com.agentscope.agent.plist
+rm ~/Library/LaunchAgents/com.aiguard.agent.plist
 # Linux:
-systemctl --user disable agentscope
-rm ~/.config/systemd/user/agentscope.service
+systemctl --user disable aiguard
+rm ~/.config/systemd/user/aiguard.service
 ```
 
 ---
@@ -86,7 +86,7 @@ rm ~/.config/systemd/user/agentscope.service
 ```
 ┌── your-site.netlify.app ───────────┐         ┌── Your machine ────────────────────────────┐
 │                                    │         │                                            │
-│  Static HTML / CSS / JS            │   SSE   │  ~/.agentscope/agent.js                   │
+│  Static HTML / CSS / JS            │   SSE   │  ~/.aiguard/agent.js                   │
 │                                    │◄────────┤  └─ listens on 127.0.0.1:4242            │
 │  Browser renders the dashboard     │         │     reads: ~/.claude/, ~/.gemini/,         │
 │                                    │         │            ~/.codex/, ps aux, lsof -i     │

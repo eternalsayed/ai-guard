@@ -1,5 +1,5 @@
 {
-  "name": "agentscope",
+  "name": "aiguard",
   "version": "1.0.0",
   "description": "Real-time monitoring for AI coding agents — Claude Code, Codex, Gemini CLI, Aider, and more.",
   "private": true,
@@ -9,7 +9,7 @@
   "scripts": {
     "build":          "node build.js",
     "dev":            "npx serve public -l 8080 --no-clipboard",
-    "dev:agent":      "AGENTSCOPE_HOST=http://localhost:8080 node public/agent.js",
+    "dev:agent":      "AIGUARD_HOST=http://localhost:8080 node public/agent.js",
     "preview":        "npm run build && npx serve dist -l 8080 --no-clipboard",
     "deploy":         "npm run build && npx netlify deploy --prod --dir=dist",
     "deploy:preview": "npm run build && npx netlify deploy --dir=dist"

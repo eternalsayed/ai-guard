@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monitor — AgentScope</title>
+<title>Monitor — AIGuard</title>
 
 <!-- Analytics: swap in your preferred privacy-respecting provider -->
 <!-- Plausible: <script defer data-domain="yourdomain.com" src="https://plausible.io/js/script.js"></script> -->
@@ -168,7 +168,7 @@ td code { font-size:11px; background:rgba(255,255,255,.06); padding:1px 5px; bor
 <nav class="monitor-nav">
   <a href="/" class="mnav-logo">
     <span class="mnav-dot" id="mnav-dot"></span>
-    AgentScope
+    AIGuard
   </a>
   <div class="mnav-right">
     <span id="last-updated"></span>
@@ -202,7 +202,7 @@ td code { font-size:11px; background:rgba(255,255,255,.06); padding:1px 5px; bor
       <button class="copy-btn" onclick="copyInstall()">Copy</button>
     </div>
     <div class="install-steps">
-      <div class="istep"><span class="istep-num">1</span><span>Downloads a single Node.js file (~15 KB) to <code>~/.agentscope/agent.js</code></span></div>
+      <div class="istep"><span class="istep-num">1</span><span>Downloads a single Node.js file (~15 KB) to <code>~/.aiguard/agent.js</code></span></div>
       <div class="istep"><span class="istep-num">2</span><span>Starts it as a background process on port 4242 (<code>127.0.0.1</code> only — not internet-accessible)</span></div>
       <div class="istep"><span class="istep-num">3</span><span>Registers with launchd (macOS) or systemd (Linux) so it restarts on login</span></div>
     </div>
@@ -229,7 +229,7 @@ td code { font-size:11px; background:rgba(255,255,255,.06); padding:1px 5px; bor
         <div><strong style="color:var(--text)">Runs:</strong> <code>ps aux</code> to list AI agent processes, and <code>lsof -i</code> to list their network connections</div>
         <div><strong style="color:var(--text)">Never reads:</strong> conversation content, API keys, tokens, or any <code>.env</code> files</div>
         <div><strong style="color:var(--text)">Never sends:</strong> any data externally — one outbound call is a version check to <code>/version.json</code></div>
-        <div><strong style="color:var(--text)">Uninstall:</strong> <code>kill $(cat ~/.agentscope/agent.pid) &amp;&amp; rm -rf ~/.agentscope</code></div>
+        <div><strong style="color:var(--text)">Uninstall:</strong> <code>kill $(cat ~/.aiguard/agent.pid) &amp;&amp; rm -rf ~/.aiguard</code></div>
       </div>
     </details>
   </div>
@@ -249,13 +249,29 @@ td code { font-size:11px; background:rgba(255,255,255,.06); padding:1px 5px; bor
 <div class="center-screen" id="screen-restart">
   <div class="screen-icon">⏸</div>
   <h1 class="screen-title">Agent isn't running</h1>
-  <p class="screen-sub">We found a previous installation but the agent isn't responding on port 4242. Start it back up with one of these:</p>
+  <p class="screen-sub">We found a previous installation but the agent isn't responding on port 4242. Start it back up:</p>
 
   <div class="install-card">
-    <h3>Quick restart</h3>
+    <h3>If you have the aliases installed</h3>
     <div class="cmd-box">
-      <code>PORT=4242 nohup node ~/.agentscope/agent.js &gt;&gt; ~/.agentscope/agent.log 2&gt;&amp;1 &amp;</code>
-      <button class="copy-btn" onclick="copyRestart()">Copy</button>
+      <code>as-start</code>
+      <button class="copy-btn" onclick="copyText('as-start', this)">Copy</button>
+    </div>
+    <div style="margin-top:10px">
+      <div class="cmd-box">
+        <code>as-restart</code>
+        <button class="copy-btn" onclick="copyText('as-restart', this)">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider">or without aliases</div>
+
+  <div class="install-card" style="margin-top:4px">
+    <h3>Manual restart</h3>
+    <div class="cmd-box">
+      <code>PORT=4242 nohup node ~/.aiguard/agent.js &gt;&gt; ~/.aiguard/agent.log 2&gt;&amp;1 &amp;</code>
+      <button class="copy-btn" id="btn-manual-restart" onclick="copyRestart()">Copy</button>
     </div>
   </div>
 
@@ -265,7 +281,7 @@ td code { font-size:11px; background:rgba(255,255,255,.06); padding:1px 5px; bor
     <h3>Full reinstall (also updates to latest)</h3>
     <div class="cmd-box">
       <code id="reinstall-cmd"></code>
-      <button class="copy-btn" onclick="copyReinstall()">Copy</button>
+      <button class="copy-btn" id="btn-reinstall" onclick="copyReinstall()">Copy</button>
     </div>
   </div>
 
@@ -462,9 +478,9 @@ function setPill(cls, label) {
 }
 
 // ── Copy helpers ───────────────────────────────────────────────────────────────
-function copyInstall()   { copyText(document.getElementById('install-cmd').textContent,  document.querySelectorAll('#screen-install .copy-btn')[0]); }
-function copyRestart()   { copyText(`PORT=4242 nohup node ~/.agentscope/agent.js >> ~/.agentscope/agent.log 2>&1 &`, document.querySelectorAll('#screen-restart .copy-btn')[0]); }
-function copyReinstall() { copyText(document.getElementById('reinstall-cmd').textContent, document.querySelectorAll('#screen-restart .copy-btn')[1]); }
+function copyInstall()   { copyText(document.getElementById('install-cmd').textContent,    document.querySelector('#screen-install .copy-btn')); }
+function copyRestart()   { copyText(`PORT=4242 nohup node ~/.aiguard/agent.js >> ~/.aiguard/agent.log 2>&1 &`, document.getElementById('btn-manual-restart')); }
+function copyReinstall() { copyText(document.getElementById('reinstall-cmd').textContent,  document.getElementById('btn-reinstall')); }
 
 function copyText(text, btn) {
   navigator.clipboard.writeText(text).then(() => {

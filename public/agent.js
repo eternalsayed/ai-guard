@@ -2,7 +2,7 @@
 'use strict';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  AgentScope — local monitoring agent
+//  AIGuard — local monitoring agent
 //  Monitors Claude Code, Codex, Gemini CLI, Aider, and other AI coding tools.
 //  Runs entirely on your machine. Streams data to your browser over SSE.
 //  Nothing is sent to any external server.
@@ -17,7 +17,7 @@ const { execSync } = require('child_process');
 
 const VERSION    = '1.0.0';
 const PORT       = parseInt(process.env.PORT || '4242', 10);
-const HOSTED_URL = process.env.AGENTSCOPE_HOST || process.env.CLAUDE_MONITOR_HOST || '__HOSTED_URL__';
+const HOSTED_URL = process.env.AIGUARD_HOST || process.env.CLAUDE_MONITOR_HOST || '__HOSTED_URL__';
 const HOME       = os.homedir();
 
 // ── Known AI agent directories ────────────────────────────────────────────────
@@ -55,7 +55,7 @@ function banner() {
   const pad = 54, line = '═'.repeat(pad);
   const row = (s) => `${C.bold}${C.cyan}║${C.reset}  ${s}${' '.repeat(pad - 2 - s.replace(/\x1b\[[0-9;]*m/g,'').length)}${C.bold}${C.cyan}║${C.reset}`;
   console.log(`\n${C.bold}${C.cyan}╔${line}╗${C.reset}`);
-  console.log(row(`AgentScope ${C.dim}v${VERSION}${C.reset}`));
+  console.log(row(`AIGuard ${C.dim}v${VERSION}${C.reset}`));
   console.log(row(`Dashboard → ${C.blue}${HOSTED_URL}${C.reset}`));
   console.log(`${C.bold}${C.cyan}╚${line}╝${C.reset}\n`);
 }
@@ -136,7 +136,7 @@ const AGENT_SIGNATURES = [
 ];
 
 // Processes that should never be flagged even if they match
-const SKIP_IF_CONTAINS = ['grep', 'agent.js', 'agentscope', 'claude-monitor'];
+const SKIP_IF_CONTAINS = ['grep', 'agent.js', 'aiguard', 'claude-monitor'];
 
 function matchesAgent(line) {
   const l = line.toLowerCase();
