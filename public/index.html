@@ -161,6 +161,31 @@ section.full { max-width: none; padding-left: 0; padding-right: 0; }
 .cta-copy-btn.copied { border-color: var(--green); color: var(--green); }
 .cta-or { color: var(--muted); font-size: 13px; margin: 20px 0; }
 
+/* ── Agent section ───────────────────────────────────────────────── */
+.agent-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; }
+.agent-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+
+.fp-list { display: flex; flex-direction: column; gap: 8px; }
+.fp-row { display: grid; grid-template-columns: 80px 80px 1fr; align-items: baseline; gap: 8px; border-bottom: 1px solid #21262d; padding-bottom: 8px; }
+.fp-row:last-child { border-bottom: none; padding-bottom: 0; }
+.fp-l { font-size: 11px; color: var(--muted); }
+.fp-v { font-size: 12px; font-weight: 700; font-family: 'SF Mono',Menlo,monospace; color: var(--text); }
+.fp-n { font-size: 11px; color: var(--muted); }
+
+.reads-list { display: flex; flex-direction: column; gap: 9px; }
+.ri { display: flex; gap: 9px; font-size: 13px; }
+.ri-icon { flex-shrink: 0; font-size: 13px; font-weight: 700; margin-top: 1px; }
+.ri.yes .ri-icon { color: var(--green); }
+.ri.no  .ri-icon { color: var(--red); }
+.ri strong { display: block; font-size: 13px; margin-bottom: 2px; }
+.ri span   { font-size: 11px; color: var(--muted); }
+
+.ctrl-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.ctrl-item h4 { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+.ctrl-item code { font-size: 11px; display: block; word-break: break-all; line-height: 1.6; }
+.ctrl-note { font-size: 12px; color: var(--muted); line-height: 1.65; border-top: 1px solid var(--border); padding-top: 12px; }
+
 /* ── Footer ──────────────────────────────────────────────────────── */
 footer { border-top: 1px solid var(--border); padding: 32px; display: flex; align-items: center; justify-content: space-between; max-width: 1100px; margin: 0 auto; }
 .footer-left { font-size: 13px; color: var(--muted); }
@@ -170,6 +195,9 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
 .footer-links a:hover { color: var(--text); text-decoration: none; }
 
 /* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .agent-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 800px) {
   nav { padding: 0 20px; }
   section { padding: 64px 20px; }
@@ -196,6 +224,7 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
   <div class="nav-links">
     <a href="#features" class="nav-link">Features</a>
     <a href="#how-it-works" class="nav-link">How it works</a>
+    <a href="#about-agent" class="nav-link">The agent</a>
     <a href="https://github.com/eternalsayed/ai-monitor" class="nav-link" target="_blank">GitHub</a>
     <a href="/monitor" class="nav-link nav-cta">Open Monitor →</a>
   </div>
@@ -365,6 +394,65 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
   </div>
 </section>
 
+<!-- ── About the agent ───────────────────────────────────────────────────── -->
+<section id="about-agent" style="border-top:1px solid var(--border)">
+  <div class="section-label">About the agent</div>
+  <h2 class="section-title">Small, transparent, fully in your control.</h2>
+  <p class="section-sub">One Node.js file, no npm dependencies. Here's exactly what it costs and what it touches.</p>
+
+  <div class="agent-grid">
+
+    <div class="agent-card">
+      <h3>Resource footprint</h3>
+      <div class="fp-list">
+        <div class="fp-row"><span class="fp-l">Disk</span>     <span class="fp-v">~15 KB</span>        <span class="fp-n">single file in <code>~/.agentscope/</code></span></div>
+        <div class="fp-row"><span class="fp-l">RAM</span>      <span class="fp-v">35–50 MB</span>      <span class="fp-n">Node.js process baseline; no growth</span></div>
+        <div class="fp-row"><span class="fp-l">CPU idle</span> <span class="fp-v">&lt;0.1%</span>      <span class="fp-n">nothing happens when no browser is open</span></div>
+        <div class="fp-row"><span class="fp-l">CPU active</span><span class="fp-v">~1–2%</span>        <span class="fp-n">brief spike every 5 s when you're on the dashboard</span></div>
+        <div class="fp-row"><span class="fp-l">Port</span>     <span class="fp-v">4242</span>          <span class="fp-n">127.0.0.1 only — not reachable from the internet</span></div>
+        <div class="fp-row"><span class="fp-l">Log file</span> <span class="fp-v">grows</span>        <span class="fp-n"><code>~/.agentscope/agent.log</code> — delete anytime</span></div>
+        <div class="fp-row"><span class="fp-l">Outbound</span> <span class="fp-v">1 req/hr</span>      <span class="fp-n">version check to <code>/version.json</code> only</span></div>
+      </div>
+    </div>
+
+    <div class="agent-card">
+      <h3>What it reads (and doesn't)</h3>
+      <div class="reads-list">
+        <div class="ri yes"><span class="ri-icon">✓</span><div><strong>Session metadata</strong><span>File size + timestamp from <code>~/.claude/</code>, <code>~/.gemini/</code>, <code>~/.codex/</code> — not the content</span></div></div>
+        <div class="ri yes"><span class="ri-icon">✓</span><div><strong>Settings files</strong><span><code>settings.json</code>, <code>config.json</code>, <code>.cursor/settings.json</code> per project</span></div></div>
+        <div class="ri yes"><span class="ri-icon">✓</span><div><strong>Process list</strong><span><code>ps aux</code> — to find AI agent processes by name</span></div></div>
+        <div class="ri yes"><span class="ri-icon">✓</span><div><strong>Network connections</strong><span><code>lsof -i</code> scoped to AI agent PIDs only</span></div></div>
+        <div class="ri no" ><span class="ri-icon">✗</span><div><strong>Session content</strong><span>Conversation text is never read — not even sampled</span></div></div>
+        <div class="ri no" ><span class="ri-icon">✗</span><div><strong>API keys / secrets</strong><span>No access to <code>.env</code>, keychain, or credential files</span></div></div>
+      </div>
+    </div>
+
+    <div class="agent-card">
+      <h3>You stay in control</h3>
+      <div class="ctrl-list">
+        <div class="ctrl-item">
+          <h4>Check it's running</h4>
+          <code>cat ~/.agentscope/agent.pid | xargs ps -p</code>
+        </div>
+        <div class="ctrl-item">
+          <h4>Tail the log</h4>
+          <code>tail -f ~/.agentscope/agent.log</code>
+        </div>
+        <div class="ctrl-item">
+          <h4>Stop</h4>
+          <code>kill $(cat ~/.agentscope/agent.pid)</code>
+        </div>
+        <div class="ctrl-item">
+          <h4>Full uninstall</h4>
+          <code>kill $(cat ~/.agentscope/agent.pid) &amp;&amp; rm -rf ~/.agentscope</code>
+        </div>
+      </div>
+      <p class="ctrl-note">The agent does <strong>not</strong> auto-start after a reboot. The installer starts it once for the current session. Re-run the installer to start it again, or manually enable the launchd / systemd service.</p>
+    </div>
+
+  </div>
+</section>
+
 <!-- ── Privacy ───────────────────────────────────────────────────────────── -->
 <section class="privacy" id="privacy">
   <div class="privacy-inner">
@@ -413,6 +501,7 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
   <div class="footer-links">
     <a href="#how-it-works">How it works</a>
     <a href="#features">Features</a>
+    <a href="#about-agent">The agent</a>
     <a href="#privacy">Privacy</a>
     <a href="https://github.com/eternalsayed/ai-monitor" target="_blank">GitHub</a>
     <a href="/monitor">Monitor →</a>
@@ -420,7 +509,10 @@ footer { border-top: 1px solid var(--border); padding: 32px; display: flex; alig
 </footer>
 
 <script>
-const SITE_URL = window.location.protocol === 'file:' ? 'https://YOUR_NETLIFY_SITE.netlify.app' : window.location.origin;
+// __HOSTED_URL__ is replaced at build time by build.js.
+// Falls back to window.location.origin when running via a local dev server.
+const _raw = '__HOSTED_URL__';
+const SITE_URL = _raw.startsWith('__') ? window.location.origin : _raw;
 document.getElementById('cta-host').textContent = SITE_URL;
 
 function ctaCopy() {

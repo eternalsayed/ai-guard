@@ -1,23 +1,29 @@
 [build]
-  publish = "public"
+  command   = "node build.js"
+  publish   = "dist"
+
+[build.environment]
+  NODE_VERSION = "18"
+  # HOSTED_URL must be set in Netlify → Site settings → Environment variables
+  # e.g. https://your-site.netlify.app  or  https://monitor.yourdomain.com
 
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
+    X-Frame-Options        = "DENY"
     X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "no-referrer"
+    Referrer-Policy        = "no-referrer"
 
 [[headers]]
   for = "/agent.js"
   [headers.values]
-    Content-Type = "application/javascript; charset=utf-8"
+    Content-Type  = "application/javascript; charset=utf-8"
     Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
   for = "/install.sh"
   [headers.values]
-    Content-Type = "text/plain; charset=utf-8"
+    Content-Type  = "text/plain; charset=utf-8"
     Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]

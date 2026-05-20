@@ -17,7 +17,7 @@ const { execSync } = require('child_process');
 
 const VERSION    = '1.0.0';
 const PORT       = parseInt(process.env.PORT || '4242', 10);
-const HOSTED_URL = process.env.AGENTSCOPE_HOST || process.env.CLAUDE_MONITOR_HOST || 'https://YOUR_SITE.netlify.app';
+const HOSTED_URL = process.env.AGENTSCOPE_HOST || process.env.CLAUDE_MONITOR_HOST || '__HOSTED_URL__';
 const HOME       = os.homedir();
 
 // ── Known AI agent directories ────────────────────────────────────────────────

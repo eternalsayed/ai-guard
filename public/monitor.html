@@ -207,6 +207,18 @@ td code { font-size:11px; background:rgba(255,255,255,.06); padding:1px 5px; bor
       <div class="istep"><span class="istep-num">3</span><span>Registers with launchd (macOS) or systemd (Linux) so it restarts on login</span></div>
     </div>
 
+    <div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+      <span style="font-size:11px;color:var(--muted)">📁 ~15 KB on disk</span>
+      <span style="font-size:11px;color:var(--muted)">·</span>
+      <span style="font-size:11px;color:var(--muted)">🧠 35–50 MB RAM</span>
+      <span style="font-size:11px;color:var(--muted)">·</span>
+      <span style="font-size:11px;color:var(--muted)">⚡ &lt;0.1% CPU when idle</span>
+      <span style="font-size:11px;color:var(--muted)">·</span>
+      <span style="font-size:11px;color:var(--muted)">🔒 127.0.0.1:4242 only</span>
+      <span style="font-size:11px;color:var(--muted)">·</span>
+      <span style="font-size:11px;color:var(--muted)">📡 1 outbound req/hr (version check)</span>
+    </div>
+
     <details style="margin-top:18px">
       <summary style="cursor:pointer;font-size:12px;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px">
         <span style="font-size:10px">▶</span> What exactly does this script do?
@@ -326,7 +338,10 @@ td code { font-size:11px; background:rgba(255,255,255,.06); padding:1px 5px; bor
 // ── Config ────────────────────────────────────────────────────────────────────
 const AGENT_PORT   = 4242;
 const AGENT_ORIGIN = `http://localhost:${AGENT_PORT}`;
-const HOSTED_URL   = window.location.protocol === 'file:' ? 'https://YOUR_NETLIFY_SITE.netlify.app' : window.location.origin;
+// __HOSTED_URL__ is replaced at build time by build.js.
+// Falls back to window.location.origin when running via a local dev server.
+const _raw = '__HOSTED_URL__';
+const HOSTED_URL = _raw.startsWith('__') ? window.location.origin : _raw;
 const LS_KEY       = 'as_agent_seen';
 
 // Inject dynamic URLs

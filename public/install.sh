@@ -22,7 +22,7 @@
 #   # Linux: systemctl --user disable agentscope && rm ~/.config/systemd/user/agentscope.service
 set -euo pipefail
 
-HOSTED_URL="https://YOUR_SITE.netlify.app"
+HOSTED_URL="__HOSTED_URL__"
 AGENT_DIR="$HOME/.agentscope"
 AGENT_PATH="$AGENT_DIR/agent.js"
 LOG_FILE="$AGENT_DIR/agent.log"
