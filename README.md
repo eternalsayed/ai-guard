@@ -110,40 +110,19 @@ Then open `/monitor` — it detects the agent automatically and connects.
 
 ## Development
 
-### Run locally
-
-No build step needed for local dev. Serve `public/` with any static server:
-
 ```bash
-# Python (zero dependencies)
-cd public && python3 -m http.server 8080
-
-# Node.js
-npx serve public -l 8080
+npm run dev          # serve public/ on :8080 — no build step needed
+npm run dev:agent    # start agent pointing at localhost:8080 (separate terminal)
 ```
 
-Open **http://localhost:8080/monitor.html**. Start the agent pointing at your local server:
+Open **http://localhost:8080/monitor.html**. The browser auto-connects once the agent is up. HTML changes take effect on refresh; `agent.js` changes require restarting the agent (`Ctrl-C`, then `npm run dev:agent` again).
+
+### Build & preview
 
 ```bash
-AGENTSCOPE_HOST=http://localhost:8080 node public/agent.js
-```
-
-The browser auto-connects once the agent is up. `index.html` and `monitor.html` take effect on refresh; `agent.js` changes require restarting the agent.
-
-### Build for deployment
-
-The build script copies `public/` → `dist/` and replaces `__HOSTED_URL__` with your actual URL:
-
-```bash
-# 1. Copy .env.example → .env and fill it in
-cp .env.example .env
-# edit .env: HOSTED_URL=https://your-site.netlify.app
-
-# 2. Build
-node build.js
-
-# 3. Serve dist/ to verify
-npx serve dist -l 8080
+cp .env.example .env  # set HOSTED_URL=https://your-site.netlify.app
+npm run build         # copies public/ → dist/, injects HOSTED_URL
+npm run preview       # builds + serves dist/ on :8080
 ```
 
 `dist/` is gitignored — never commit it.
@@ -152,12 +131,18 @@ npx serve dist -l 8080
 
 ## Deploy to Netlify
 
-1. Fork this repo
-2. Connect to Netlify → **New site → Import from Git**
-3. Set **Site settings → Environment variables**: `HOSTED_URL` = your full site URL (e.g. `https://monitor.yourdomain.com`)
-4. Deploy — Netlify runs `node build.js` automatically and publishes `dist/`
+**Auto-deploy (recommended):** connect the repo to Netlify, set `HOSTED_URL` in **Site settings → Environment variables**, and every push to `main` deploys automatically.
 
-To use a custom domain, set it up in Netlify's domain settings, then update `HOSTED_URL` to match.
+**Manual deploy:**
+
+```bash
+npm run deploy          # build + deploy to production
+npm run deploy:preview  # build + deploy as a draft URL (no production traffic)
+```
+
+Both scripts use `npx netlify` — you'll be prompted to log in if you haven't already (`npx netlify login`).
+
+To use a custom domain, configure it in Netlify's domain settings, then update `HOSTED_URL` to match and redeploy.
 
 ---
 
