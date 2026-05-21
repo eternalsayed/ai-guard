@@ -25,6 +25,17 @@
 
   <!-- Google Analytics (disabled when GTAG_ID is not set) -->
   <script>
+    /*
+     * GA4 Custom Dimensions — create these in GA4 Admin → Custom definitions:
+     *   user_segment   (User scope)   — visitor | downloader | installer
+     *   session_type   (Event scope)  — new | returning
+     *
+     * Recommended Audiences to build in GA4:
+     *   "Downloaders"    — event = install_copy  (or user_segment = downloader/installer)
+     *   "Installers"     — event = agent_connect (or user_segment = installer)
+     *   "Repeat visitors"— event = repeat_visit
+     *   "High-risk users"— event = high_risk_alert
+     */
     (function () {
       var id = '__GTAG_ID__';
       if (!id || id.startsWith('__')) return;
@@ -35,8 +46,37 @@
       window.dataLayer = window.dataLayer || [];
       function gtag() { dataLayer.push(arguments); }
       gtag('js', new Date());
-      gtag('config', id);
-      window._gtag = gtag;
+
+      // ── Segment detection ──────────────────────────────────────────────────
+      var RANK = ['visitor', 'downloader', 'installer'];
+      var agentInstalled = localStorage.getItem('as_agent_seen') === '1';
+      var storedSeg      = localStorage.getItem('as_user_segment') || '';
+      var segment        = agentInstalled ? 'installer'
+                         : RANK.includes(storedSeg) ? storedSeg : 'visitor';
+
+      var firstVisit = !localStorage.getItem('as_site_visited');
+      if (firstVisit) localStorage.setItem('as_site_visited', '1');
+      var sessionType = firstVisit ? 'new' : 'returning';
+
+      gtag('config', id, { send_page_view: false });   // we send it manually below
+      gtag('set', 'user_properties', {
+        user_segment:    segment,
+        agent_installed: String(agentInstalled),
+      });
+      gtag('event', 'page_view', { session_type: sessionType, user_segment: segment });
+      if (!firstVisit) gtag('event', 'repeat_visit', { user_segment: segment });
+
+      window._gtag      = gtag;
+      window._asSegment = segment;
+
+      // Upgrade: visitor → downloader → installer (sticky, never downgrades)
+      window._upgradeSegment = function (newSeg) {
+        if (RANK.indexOf(newSeg) > RANK.indexOf(window._asSegment)) {
+          window._asSegment = newSeg;
+          localStorage.setItem('as_user_segment', newSeg);
+          gtag('set', 'user_properties', { user_segment: newSeg });
+        }
+      };
     })();
   </script>
   <style>
@@ -1665,7 +1705,10 @@
       navigator.clipboard.writeText(cmd).then(() => {
         btn.textContent = 'Copied!'; btn.classList.add('copied');
         setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
-        if (window._gtag) window._gtag('event', 'install_copy', { action: 'cta' });
+        if (window._gtag) {
+          window._gtag('event', 'install_copy', { action: 'cta', user_segment: window._asSegment });
+          window._upgradeSegment && window._upgradeSegment('downloader');
+        }
       });
     }
   </script>

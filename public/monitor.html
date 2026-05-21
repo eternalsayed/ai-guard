@@ -21,8 +21,30 @@
       window.dataLayer = window.dataLayer || [];
       function gtag() { dataLayer.push(arguments); }
       gtag('js', new Date());
-      gtag('config', id, { page_title: 'Monitor' });
-      window._gtag = gtag;
+
+      var RANK          = ['visitor', 'downloader', 'installer'];
+      var agentInstalled = localStorage.getItem('as_agent_seen') === '1';
+      var storedSeg      = localStorage.getItem('as_user_segment') || '';
+      var segment        = agentInstalled ? 'installer'
+                         : RANK.includes(storedSeg) ? storedSeg : 'visitor';
+      var firstVisit     = !localStorage.getItem('as_site_visited');
+      if (firstVisit) localStorage.setItem('as_site_visited', '1');
+      var sessionType    = firstVisit ? 'new' : 'returning';
+
+      gtag('config', id, { page_title: 'Monitor', send_page_view: false });
+      gtag('set', 'user_properties', { user_segment: segment, agent_installed: String(agentInstalled) });
+      gtag('event', 'page_view', { session_type: sessionType, user_segment: segment });
+      if (!firstVisit) gtag('event', 'repeat_visit', { user_segment: segment });
+
+      window._gtag      = gtag;
+      window._asSegment = segment;
+      window._upgradeSegment = function (newSeg) {
+        if (RANK.indexOf(newSeg) > RANK.indexOf(window._asSegment)) {
+          window._asSegment = newSeg;
+          localStorage.setItem('as_user_segment', newSeg);
+          gtag('set', 'user_properties', { user_segment: newSeg });
+        }
+      };
     })();
   </script>
 
@@ -1306,7 +1328,11 @@
     function connectSSE() {
       if (sse) { sse.close(); sse = null; }
       sse = new EventSource(`${AGENT_ORIGIN}/events`);
-      sse.onopen = () => { agentConnected = true; setPill('live', 'live'); if (window._gtag) window._gtag('event', 'agent_connect'); };
+      sse.onopen = () => {
+        agentConnected = true; setPill('live', 'live');
+        window._upgradeSegment && window._upgradeSegment('installer');
+        if (window._gtag) window._gtag('event', 'agent_connect', { user_segment: window._asSegment });
+      };
       sse.onmessage = (e) => {
         try {
           const data = JSON.parse(e.data);
@@ -1346,7 +1372,10 @@
       navigator.clipboard.writeText(text).then(() => {
         const orig = btn.textContent; btn.textContent = 'Copied!'; btn.classList.add('copied');
         setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
-        if (window._gtag) window._gtag('event', 'install_copy', { action: action || 'copy' });
+        if (window._gtag) {
+          window._gtag('event', 'install_copy', { action: action || 'copy', user_segment: window._asSegment });
+          window._upgradeSegment && window._upgradeSegment('downloader');
+        }
       });
     }
 
@@ -1538,7 +1567,7 @@
         </div>`).join('');
 
       if (window._gtag && rows.some(r => r.sev === 'critical' || r.sev === 'high'))
-        window._gtag('event', 'high_risk_alert', { alert_count: rows.length });
+        window._gtag('event', 'high_risk_alert', { alert_count: rows.length, user_segment: window._asSegment });
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────────
