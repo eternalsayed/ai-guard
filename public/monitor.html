@@ -705,6 +705,80 @@
       font-size: 11px;
     }
 
+    /* ── Controls bar ────────────────────────────────────────────────────── */
+    #controls-bar {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    #controls-bar.visible { display: flex; }
+
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ctrl-sep {
+      width: 1px;
+      height: 18px;
+      background: var(--border);
+      margin: 0 4px;
+    }
+
+    .ctrl-spacer { flex: 1; }
+
+    .ctrl-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: border-color .15s, color .15s, background .15s;
+      white-space: nowrap;
+    }
+
+    .ctrl-btn:hover { border-color: var(--blue); color: var(--text); }
+
+    .ctrl-btn.active { border-color: var(--green); color: var(--green); background: rgba(63,185,80,.08); }
+
+    .ctrl-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+    .ctrl-btn .btn-icon { font-size: 11px; line-height: 1; }
+
+    .ctrl-label {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .ctrl-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .ctrl-select:focus { outline: none; border-color: var(--blue); }
+
+    @media (max-width: 640px) {
+      #controls-bar { gap: 4px; padding: 8px 12px; }
+      .ctrl-label   { display: none; }
+    }
+
     /* ── Sparkline ───────────────────────────────────────────────────────── */
     .sparkline-wrap {
       margin-top: 10px;
@@ -814,6 +888,62 @@
       <a href="https://github.com/eternalsayed/ai-guard" class="mnav-link" target="_blank">GitHub</a>
     </div>
   </nav>
+
+  <!-- ── Controls bar (shown only when dashboard is live) ─────────────────── -->
+  <div id="controls-bar">
+    <!-- Left: live controls -->
+    <div class="ctrl-group">
+      <button class="ctrl-btn" id="btn-pause" onclick="togglePause()" title="Pause/resume display updates">
+        <span class="btn-icon" id="pause-icon">⏸</span>
+        <span id="pause-label">Pause</span>
+      </button>
+      <button class="ctrl-btn" id="btn-refresh" onclick="forceRefresh()" title="Trigger an immediate scan now">
+        <span class="btn-icon">↺</span>
+        Refresh now
+      </button>
+    </div>
+
+    <div class="ctrl-sep"></div>
+
+    <!-- Middle: settings -->
+    <div class="ctrl-group">
+      <span class="ctrl-label">Poll every</span>
+      <select class="ctrl-select" id="sel-interval" onchange="setInterval_(this.value)" title="How often the agent scans your system">
+        <option value="2000">2 s</option>
+        <option value="5000" selected>5 s</option>
+        <option value="10000">10 s</option>
+        <option value="30000">30 s</option>
+        <option value="60000">60 s</option>
+      </select>
+    </div>
+
+    <div class="ctrl-sep"></div>
+
+    <div class="ctrl-group">
+      <button class="ctrl-btn" id="btn-notify" onclick="toggleNotify()" title="Get a browser notification when a new critical or high alert appears">
+        <span class="btn-icon">🔔</span>
+        <span id="notify-label">Notify</span>
+      </button>
+      <button class="ctrl-btn" onclick="exportSnapshot()" title="Download the current data as JSON">
+        <span class="btn-icon">⬇</span>
+        Export
+      </button>
+    </div>
+
+    <div class="ctrl-spacer"></div>
+
+    <!-- Right: agent controls -->
+    <div class="ctrl-group">
+      <button class="ctrl-btn danger" onclick="restartAgent()" title="Stop the agent — use as-restart in your terminal to bring it back">
+        <span class="btn-icon">↺</span>
+        Restart
+      </button>
+      <button class="ctrl-btn danger" onclick="stopAgent()" title="Stop the agent process">
+        <span class="btn-icon">■</span>
+        Stop
+      </button>
+    </div>
+  </div>
 
   <!-- ── Screen: Checking ────────────────────────────────────────────────── -->
   <div class="center-screen active" id="screen-checking">
@@ -1109,10 +1239,13 @@
       el.style.display = name === 'dashboard' ? 'block' : '';
 
       const pill = document.getElementById('nav-conn-pill');
+      const bar  = document.getElementById('controls-bar');
       if (name === 'dashboard') {
         pill.style.display = 'flex';
+        bar.classList.add('visible');
       } else {
         pill.style.display = 'none';
+        bar.classList.remove('visible');
       }
     }
 
@@ -1122,6 +1255,10 @@
         const r = await fetch(`${AGENT_ORIGIN}/ping`, { signal: AbortSignal.timeout(1200) });
         if (!r.ok) return false;
         const j = await r.json();
+        if (j.scanInterval) {
+          const sel = el('sel-interval');
+          if (sel) sel.value = String(j.scanInterval);
+        }
         return j.ok === true;
       } catch { return false; }
     }
@@ -1173,8 +1310,12 @@
       sse.onmessage = (e) => {
         try {
           const data = JSON.parse(e.data);
-          render(data);
-          document.getElementById('last-updated').textContent = 'updated ' + new Date(data.ts).toLocaleTimeString('en-GB');
+          lastSnapshot = data;
+          fireNotifications(data);
+          if (!paused) {
+            render(data);
+            document.getElementById('last-updated').textContent = 'updated ' + new Date(data.ts).toLocaleTimeString('en-GB');
+          }
         } catch { }
       };
       sse.onerror = () => {
@@ -1405,6 +1546,119 @@
     function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     function badge(r) { return `<span class="badge badge-${r}">${r}</span>`; }
     function cardClass(id, cls) { const c = el(id); c.classList.remove('alert', 'warn', 'ok'); c.classList.add(cls); }
+
+    // ── Controls ──────────────────────────────────────────────────────────────────
+    let paused = false;
+    let lastSnapshot = null;
+    let notifyEnabled = false;
+    let notifyPrefs = { critical: true, high: true, medium: false, surge: false };
+    let seenAlertKeys = new Set();
+
+    function togglePause() {
+      paused = !paused;
+      el('pause-icon').textContent  = paused ? '▶' : '⏸';
+      el('pause-label').textContent = paused ? 'Resume' : 'Pause';
+      el('btn-pause').classList.toggle('active', paused);
+    }
+
+    function forceRefresh() {
+      fetch(`${AGENT_ORIGIN}/scan`, { method: 'POST' }).catch(() => {});
+    }
+
+    function setInterval_(ms) {
+      fetch(`${AGENT_ORIGIN}/config`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scanInterval: Number(ms) }),
+      }).catch(() => {});
+    }
+
+    async function stopAgent() {
+      if (!confirm('Stop the AISentry agent? Use as-start or as-restart in your terminal to bring it back.')) return;
+      try { await fetch(`${AGENT_ORIGIN}/stop`, { method: 'POST' }); } catch {}
+    }
+
+    async function restartAgent() {
+      if (!confirm('Stop the agent now? You\'ll need to run as-restart in your terminal to restart it.')) return;
+      try { await fetch(`${AGENT_ORIGIN}/stop`, { method: 'POST' }); } catch {}
+    }
+
+    function exportSnapshot() {
+      if (!lastSnapshot) return;
+      const blob = new Blob([JSON.stringify(lastSnapshot, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `aisentry-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.json`;
+      a.click();
+    }
+
+    // Notifications
+    async function toggleNotify() {
+      if (notifyEnabled) {
+        notifyEnabled = false;
+        el('btn-notify').classList.remove('active');
+        el('notify-label').textContent = 'Notify';
+        seenAlertKeys.clear();
+        return;
+      }
+      if (!('Notification' in window)) { alert('Your browser does not support notifications.'); return; }
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') { alert('Notification permission denied.'); return; }
+      showNotifyPrefs();
+    }
+
+    function showNotifyPrefs() {
+      const existing = document.getElementById('notify-prefs-modal');
+      if (existing) { existing.remove(); return; }
+      const modal = document.createElement('div');
+      modal.id = 'notify-prefs-modal';
+      modal.style.cssText = `position:fixed;top:60px;right:16px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;width:260px;box-shadow:0 8px 32px rgba(0,0,0,.5)`;
+      modal.innerHTML = `
+        <div style="font-size:13px;font-weight:600;margin-bottom:14px;color:var(--text)">Notify me when…</div>
+        ${[
+          ['critical', '🔴', 'Critical alerts'],
+          ['high',     '🟠', 'High-risk alerts'],
+          ['medium',   '🟡', 'Medium-risk alerts'],
+          ['surge',    '📈', 'Session surges'],
+        ].map(([k, icon, label]) => `
+          <label style="display:flex;align-items:center;gap:10px;padding:7px 0;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;color:var(--muted)">
+            <input type="checkbox" id="np-${k}" ${notifyPrefs[k] ? 'checked' : ''} style="accent-color:var(--green);width:14px;height:14px" onchange="notifyPrefs['${k}']=this.checked">
+            <span>${icon} ${label}</span>
+          </label>`).join('')}
+        <button onclick="applyNotifyPrefs()" style="margin-top:14px;width:100%;background:var(--green);color:#0d1117;border:none;border-radius:6px;padding:7px;font-size:13px;font-weight:600;cursor:pointer">Enable notifications</button>
+        <button onclick="document.getElementById('notify-prefs-modal').remove()" style="margin-top:6px;width:100%;background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:6px;font-size:12px;cursor:pointer">Cancel</button>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    function applyNotifyPrefs() {
+      notifyEnabled = true;
+      seenAlertKeys.clear();
+      el('btn-notify').classList.add('active');
+      el('notify-label').textContent = 'Notify on';
+      document.getElementById('notify-prefs-modal')?.remove();
+    }
+
+    function fireNotifications(d) {
+      if (!notifyEnabled || Notification.permission !== 'granted') return;
+      const toFire = [];
+      if (notifyPrefs.critical)
+        (d.permissions || []).filter(p => p.risk === 'critical').forEach(p => toFire.push({ key: `crit:${p.rule}`, title: '🔴 Critical alert', body: p.rule }));
+      if (notifyPrefs.high) {
+        (d.permissions || []).filter(p => p.risk === 'high').forEach(p => toFire.push({ key: `high:${p.rule}`, title: '🟠 High-risk permission', body: p.rule }));
+        (d.network || []).filter(n => n.risk === 'high').forEach(n => toFire.push({ key: `net:${n.dest}`, title: '🟠 Unknown connection', body: n.dest }));
+      }
+      if (notifyPrefs.medium)
+        (d.network || []).filter(n => n.risk === 'medium').forEach(n => toFire.push({ key: `med:${n.dest}`, title: '🟡 Suspicious connection', body: n.dest }));
+      if (notifyPrefs.surge && (d.stats?.sessionsThisHour || 0) > 15)
+        toFire.push({ key: `surge:${d.stats.sessionsThisHour}`, title: '📈 Session surge', body: `${d.stats.sessionsThisHour} sessions in the last hour` });
+
+      toFire.forEach(({ key, title, body }) => {
+        if (seenAlertKeys.has(key)) return;
+        seenAlertKeys.add(key);
+        new Notification(title, { body, icon: '/logo.svg', tag: key });
+      });
+    }
 
     // ── Boot ───────────────────────────────────────────────────────────────────────
     initialCheck();

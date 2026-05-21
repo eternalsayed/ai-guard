@@ -375,9 +375,27 @@ function checkVersion() {
 }
 
 // ── HTTP server ───────────────────────────────────────────────────────────────
+let scanInterval = 5000;
+let scanTimer    = null;
+
+function resetScanTimer() {
+  if (scanTimer) clearInterval(scanTimer);
+  scanTimer = setInterval(() => {
+    if (clients.size > 0) { const d = collectAll(); logScan(d); push(d); }
+  }, scanInterval);
+}
+
+function readBody(req) {
+  return new Promise(resolve => {
+    let buf = '';
+    req.on('data', c => { buf += c; if (buf.length > 4096) buf = buf.slice(0, 4096); });
+    req.on('end', () => { try { resolve(JSON.parse(buf)); } catch { resolve({}); } });
+  });
+}
+
 const CORS = {
   'Access-Control-Allow-Origin':          '*',
-  'Access-Control-Allow-Methods':         'GET, OPTIONS',
+  'Access-Control-Allow-Methods':         'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers':         'Content-Type',
   'Access-Control-Allow-Private-Network': 'true',
 };
@@ -389,7 +407,45 @@ http.createServer((req, res) => {
 
   if (url === '/ping') {
     res.setHeader('Content-Type','application/json');
-    res.end(JSON.stringify({ ok:true, version:VERSION, port:PORT, updateAvailable }));
+    res.end(JSON.stringify({ ok:true, version:VERSION, port:PORT, updateAvailable, scanInterval }));
+    return;
+  }
+
+  // POST /stop — graceful shutdown
+  if (url === '/stop' && req.method === 'POST') {
+    res.setHeader('Content-Type','application/json');
+    res.end(JSON.stringify({ ok:true }));
+    log('ctrl', 'stop requested by browser', C.yellow);
+    setTimeout(() => process.exit(0), 150);
+    return;
+  }
+
+  // POST /scan — immediate scan push
+  if (url === '/scan' && req.method === 'POST') {
+    res.setHeader('Content-Type','application/json');
+    const d = collectAll(); logScan(d); push(d);
+    res.end(JSON.stringify({ ok:true }));
+    return;
+  }
+
+  // GET /config — return current settings
+  if (url === '/config' && req.method === 'GET') {
+    res.setHeader('Content-Type','application/json');
+    res.end(JSON.stringify({ scanInterval }));
+    return;
+  }
+
+  // POST /config — update settings
+  if (url === '/config' && req.method === 'POST') {
+    readBody(req).then(body => {
+      if (typeof body.scanInterval === 'number' && body.scanInterval >= 2000 && body.scanInterval <= 300000) {
+        scanInterval = body.scanInterval;
+        resetScanTimer();
+        log('ctrl', `poll interval → ${scanInterval / 1000}s`, C.yellow);
+      }
+      res.setHeader('Content-Type','application/json');
+      res.end(JSON.stringify({ ok:true, scanInterval }));
+    });
     return;
   }
 
@@ -416,7 +472,7 @@ http.createServer((req, res) => {
   console.log(`${C.grey}${'─'.repeat(56)}${C.reset}`);
   const first = collectAll(); logScan(first);
   console.log(`${C.grey}${'─'.repeat(56)}${C.reset}`);
-  setInterval(()=>{ if(clients.size>0){ const d=collectAll(); logScan(d); push(d); } }, 5000);
+  resetScanTimer();
   checkVersion();
   setInterval(checkVersion, 36e5);
 }).on('error', e => {
