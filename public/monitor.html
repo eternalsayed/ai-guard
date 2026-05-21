@@ -502,6 +502,8 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .panel-header {
@@ -630,11 +632,20 @@
       border: 1px solid rgba(188, 140, 255, .25);
     }
 
+    .panel-body.feed-body {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
     .feed {
       display: flex;
       flex-direction: column;
       gap: 1px;
-      max-height: 360px;
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
     }
 
@@ -1053,7 +1064,7 @@
         <div class="panel">
           <div class="panel-header"><span class="panel-title">Recent activity</span><span class="panel-badge"
               id="badge-activity">—</span></div>
-          <div class="panel-body" style="padding-top:8px;padding-bottom:8px">
+          <div class="panel-body feed-body" style="padding-top:8px;padding-bottom:8px">
             <div class="feed" id="feed-activity"></div>
           </div>
         </div>
