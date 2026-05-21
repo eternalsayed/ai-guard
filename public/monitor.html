@@ -1,666 +1,1291 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monitor — AIGuard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitor — AISentry</title>
 
-<!-- Analytics: swap in your preferred privacy-respecting provider -->
-<!-- Plausible: <script defer data-domain="yourdomain.com" src="https://plausible.io/js/script.js"></script> -->
-<!-- Fathom:    <script src="https://cdn.usefathom.com/script.js" data-site="XXXXXXXX" defer></script>   -->
-<!-- Umami:     <script async src="https://analytics.umami.is/script.js" data-website-id="..."></script>  -->
+  <!-- Analytics: swap in your preferred privacy-respecting provider -->
+  <!-- Plausible: <script defer data-domain="yourdomain.com" src="https://plausible.io/js/script.js"></script> -->
+  <!-- Fathom:    <script src="https://cdn.usefathom.com/script.js" data-site="XXXXXXXX" defer></script>   -->
+  <!-- Umami:     <script async src="https://analytics.umami.is/script.js" data-website-id="..."></script>  -->
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-:root {
-  --bg:      #0d1117;
-  --surface: #161b22;
-  --border:  #30363d;
-  --text:    #e6edf3;
-  --muted:   #8b949e;
-  --green:   #3fb950;
-  --yellow:  #d29922;
-  --orange:  #f0883e;
-  --red:     #f85149;
-  --blue:    #58a6ff;
-  --purple:  #bc8cff;
-}
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --orange: #f0883e;
+      --red: #f85149;
+      --blue: #58a6ff;
+      --purple: #bc8cff;
+    }
 
-body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }
-code { font-family: 'SF Mono','Fira Code',Menlo,monospace; font-size: .875em; background: rgba(255,255,255,.07); padding: 2px 6px; border-radius: 4px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
 
-/* ── Shared nav ───────────────────────────────────────────────────── */
-.monitor-nav {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px; height: 52px;
-  border-bottom: 1px solid var(--border);
-  background: rgba(13,17,23,.92); backdrop-filter: blur(12px);
-  position: sticky; top: 0; z-index: 100;
-}
-.mnav-logo { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--text); text-decoration: none; }
-.mnav-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-.mnav-dot.live { background: var(--green); animation: pulse 2s infinite; box-shadow: 0 0 6px var(--green); }
-.mnav-right { display: flex; align-items: center; gap: 12px; }
-.mnav-link { color: var(--muted); font-size: 13px; text-decoration: none; transition: color .15s; }
-.mnav-link:hover { color: var(--text); }
-#nav-conn-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); }
-#nav-conn-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
-#nav-conn-pill.live .dot { background: var(--green); animation: pulse 2s infinite; }
-#nav-conn-pill.live { color: var(--green); border-color: rgba(63,185,80,.3); }
-#nav-conn-pill.reconnecting .dot { background: var(--yellow); animation: blink 1s infinite; }
-#nav-conn-pill.reconnecting { color: var(--yellow); border-color: rgba(210,153,34,.3); }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-@keyframes blink  { 0%,100%{opacity:1} 50%{opacity:.2} }
+    code {
+      font-family: 'SF Mono', 'Fira Code', Menlo, monospace;
+      font-size: .875em;
+      background: rgba(255, 255, 255, .07);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
 
-/* ── Center screens (install / restart / checking) ────────────────── */
-.center-screen {
-  display: none;
-  flex-direction: column; align-items: center; justify-content: center;
-  min-height: calc(100vh - 52px); padding: 40px 24px; text-align: center;
-}
-.center-screen.active { display: flex; }
+    /* ── Shared nav ───────────────────────────────────────────────────── */
+    .monitor-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 52px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(13, 17, 23, .92);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-.screen-icon { font-size: 40px; margin-bottom: 20px; }
-.screen-title { font-size: 26px; font-weight: 700; margin-bottom: 12px; }
-.screen-sub { color: var(--muted); max-width: 460px; margin-bottom: 36px; line-height: 1.7; }
+    .mnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+    }
 
-.install-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px 28px; max-width: 540px; width: 100%; text-align: left; margin-bottom: 20px; }
-.install-card h3 { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
+    .mnav-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
 
-.cmd-box { display: flex; align-items: center; gap: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 11px 14px; }
-.cmd-box code { flex: 1; font-family: 'SF Mono','Fira Code',Menlo,monospace; font-size: 13px; color: var(--green); word-break: break-all; background: none; padding: 0; }
-.copy-btn { flex-shrink: 0; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: all .15s; }
-.copy-btn:hover { border-color: var(--blue); color: var(--blue); }
-.copy-btn.copied { border-color: var(--green); color: var(--green); }
+    .mnav-dot.live {
+      background: var(--green);
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 6px var(--green);
+    }
 
-.install-steps { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; }
-.istep { display: flex; gap: 12px; font-size: 13px; color: var(--muted); }
-.istep-num { width: 20px; height: 20px; border-radius: 50%; background: var(--border); color: var(--text); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .mnav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-.waiting { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; margin-top: 20px; }
-.waiting-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); animation: blink 1.2s infinite; }
-.waiting.connected { color: var(--green); }
-.waiting.connected .waiting-dot { background: var(--green); animation: none; }
+    .mnav-link {
+      color: var(--muted);
+      font-size: 13px;
+      text-decoration: none;
+      transition: color .15s;
+    }
 
-.ghost-link { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; text-decoration: underline; margin-top: 24px; }
-.ghost-link:hover { color: var(--text); }
+    .mnav-link:hover {
+      color: var(--text);
+    }
 
-.divider { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 12px; max-width: 540px; width: 100%; margin: 4px 0; }
-.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    #nav-conn-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
 
-.privacy-note { font-size: 12px; color: var(--muted); max-width: 400px; line-height: 1.6; margin-top: 28px; }
-.privacy-note a { color: var(--blue); }
+    #nav-conn-pill .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
 
-/* ── Dashboard ────────────────────────────────────────────────────── */
-#screen-dashboard { display: none; }
-#screen-dashboard.active { display: block; }
+    #nav-conn-pill.live .dot {
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
 
-main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+    #nav-conn-pill.live {
+      color: var(--green);
+      border-color: rgba(63, 185, 80, .3);
+    }
 
-#update-banner { display:none; align-items:center; justify-content:space-between; background:rgba(210,153,34,.08); border:1px solid rgba(210,153,34,.3); border-radius:8px; padding:10px 16px; margin-bottom:16px; font-size:13px; }
-#update-banner.show { display:flex; }
-#update-banner code { font-size:12px; background:rgba(255,255,255,.06); padding:2px 6px; border-radius:4px; color:var(--yellow); }
+    #nav-conn-pill.reconnecting .dot {
+      background: var(--yellow);
+      animation: blink 1s infinite;
+    }
 
-.alert-strip { display:none; align-items:center; gap:8px; background:rgba(248,81,73,.07); border:1px solid rgba(248,81,73,.25); border-radius:8px; padding:10px 14px; margin-bottom:16px; font-size:13px; color:var(--red); }
-.alert-strip.show { display:flex; }
+    #nav-conn-pill.reconnecting {
+      color: var(--yellow);
+      border-color: rgba(210, 153, 34, .3);
+    }
 
-.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
-.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px 20px; transition:border-color .3s; }
-.stat-card .label { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:6px; }
-.stat-card .value { font-size:28px; font-weight:700; line-height:1; transition:color .3s; }
-.stat-card .sub   { font-size:11px; color:var(--muted); margin-top:4px; }
-.stat-card.ok   .value { color:var(--green); }
-.stat-card.warn .value { color:var(--yellow); }
-.stat-card.alert .value { color:var(--red); }
+    @keyframes pulse {
 
-.grid-3 { display:grid; grid-template-columns:2fr 1fr 1fr; gap:16px; margin-bottom:16px; }
-.grid-2 { display:grid; grid-template-columns:1fr 1fr;   gap:16px; margin-bottom:16px; }
+      0%,
+      100% {
+        opacity: 1
+      }
 
-.panel { background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
-.panel-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); }
-.panel-title  { font-size:13px; font-weight:600; }
-.panel-badge  { font-size:11px; background:var(--border); border-radius:20px; padding:2px 8px; color:var(--muted); }
-.panel-body   { padding:16px; }
-.chart-wrap   { position:relative; height:200px; }
+      50% {
+        opacity: .4
+      }
+    }
 
-table { width:100%; border-collapse:collapse; font-size:12px; }
-th { text-align:left; padding:6px 10px; color:var(--muted); font-weight:500; font-size:11px; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border); }
-td { padding:7px 10px; border-bottom:1px solid #21262d; vertical-align:top; }
-tr:last-child td { border-bottom:none; }
-tr:hover td { background:rgba(255,255,255,.02); }
-.empty { color:var(--muted); text-align:center; padding:24px; font-size:12px; }
+    @keyframes blink {
 
-.badge { display:inline-block; padding:1px 7px; border-radius:20px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
-.badge-critical { background:rgba(248,81,73,.15);  color:var(--red);    border:1px solid rgba(248,81,73,.3); }
-.badge-high     { background:rgba(240,136,62,.12); color:var(--orange); border:1px solid rgba(240,136,62,.3); }
-.badge-medium   { background:rgba(210,153,34,.12); color:var(--yellow); border:1px solid rgba(210,153,34,.3); }
-.badge-low      { background:rgba(88,166,255,.1);  color:var(--blue);   border:1px solid rgba(88,166,255,.25); }
-.badge-ok       { background:rgba(63,185,80,.1);   color:var(--green);  border:1px solid rgba(63,185,80,.25); }
-.badge-allow    { background:rgba(63,185,80,.1);   color:var(--green);  border:1px solid rgba(63,185,80,.25); }
-.badge-deny     { background:rgba(248,81,73,.1);   color:var(--red);    border:1px solid rgba(248,81,73,.25); }
-.badge-config   { background:rgba(188,140,255,.1); color:var(--purple); border:1px solid rgba(188,140,255,.25); }
+      0%,
+      100% {
+        opacity: 1
+      }
 
-.feed { display:flex; flex-direction:column; gap:1px; max-height:360px; overflow-y:auto; }
-.feed-item { display:grid; grid-template-columns:80px 1fr; gap:10px; padding:7px 0; border-bottom:1px solid #21262d; }
-.feed-item:last-child { border-bottom:none; }
-.feed-time { font-size:11px; color:var(--blue); font-variant-numeric:tabular-nums; }
-.feed-date { font-size:10px; color:var(--muted); }
-.feed-proj { font-size:11px; color:var(--purple); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.feed-prompt { font-size:12px; color:var(--text); opacity:.85; }
+      50% {
+        opacity: .2
+      }
+    }
 
-.mono { font-family:'SF Mono','Fira Code',Menlo,monospace; font-size:11px; }
-td code { font-size:11px; background:rgba(255,255,255,.06); padding:1px 5px; border-radius:3px; word-break:break-all; }
-.reason { color:var(--muted); font-size:11px; }
+    /* ── Center screens (install / restart / checking) ────────────────── */
+    .center-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 52px);
+      padding: 40px 24px;
+      text-align: center;
+    }
 
-#last-updated { color:var(--muted); font-size:12px; }
+    .center-screen.active {
+      display: flex;
+    }
 
-@media(max-width:900px){
-  .stats-row { grid-template-columns:repeat(2,1fr); }
-  .grid-2,.grid-3 { grid-template-columns:1fr; }
-}
-</style>
+    .screen-icon {
+      font-size: 40px;
+      margin-bottom: 20px;
+    }
+
+    .screen-title {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .screen-sub {
+      color: var(--muted);
+      max-width: 460px;
+      margin-bottom: 36px;
+      line-height: 1.7;
+    }
+
+    .install-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      max-width: 540px;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    .install-card h3 {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 14px;
+    }
+
+    .cmd-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+    }
+
+    .cmd-box code {
+      flex: 1;
+      font-family: 'SF Mono', 'Fira Code', Menlo, monospace;
+      font-size: 13px;
+      color: var(--green);
+      word-break: break-all;
+      background: none;
+      padding: 0;
+    }
+
+    .copy-btn {
+      flex-shrink: 0;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .copy-btn:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .copy-btn.copied {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .install-steps {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .istep {
+      display: flex;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .istep-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .waiting {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 20px;
+    }
+
+    .waiting-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--yellow);
+      animation: blink 1.2s infinite;
+    }
+
+    .waiting.connected {
+      color: var(--green);
+    }
+
+    .waiting.connected .waiting-dot {
+      background: var(--green);
+      animation: none;
+    }
+
+    .ghost-link {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: 24px;
+    }
+
+    .ghost-link:hover {
+      color: var(--text);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      max-width: 540px;
+      width: 100%;
+      margin: 4px 0;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .privacy-note {
+      font-size: 12px;
+      color: var(--muted);
+      max-width: 400px;
+      line-height: 1.6;
+      margin-top: 28px;
+    }
+
+    .privacy-note a {
+      color: var(--blue);
+    }
+
+    /* ── Dashboard ────────────────────────────────────────────────────── */
+    #screen-dashboard {
+      display: none;
+    }
+
+    #screen-dashboard.active {
+      display: block;
+    }
+
+    main {
+      padding: 20px 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    #update-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(210, 153, 34, .08);
+      border: 1px solid rgba(210, 153, 34, .3);
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+
+    #update-banner.show {
+      display: flex;
+    }
+
+    #update-banner code {
+      font-size: 12px;
+      background: rgba(255, 255, 255, .06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--yellow);
+    }
+
+    .alert-strip {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(248, 81, 73, .07);
+      border: 1px solid rgba(248, 81, 73, .25);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--red);
+    }
+
+    .alert-strip.show {
+      display: flex;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      transition: border-color .3s;
+    }
+
+    .stat-card .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      transition: color .3s;
+    }
+
+    .stat-card .sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .stat-card.ok .value {
+      color: var(--green);
+    }
+
+    .stat-card.warn .value {
+      color: var(--yellow);
+    }
+
+    .stat-card.alert .value {
+      color: var(--red);
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .panel-badge {
+      font-size: 11px;
+      background: var(--border);
+      border-radius: 20px;
+      padding: 2px 8px;
+      color: var(--muted);
+    }
+
+    .panel-body {
+      padding: 16px;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 200px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th {
+      text-align: left;
+      padding: 6px 10px;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #21262d;
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .badge-critical {
+      background: rgba(248, 81, 73, .15);
+      color: var(--red);
+      border: 1px solid rgba(248, 81, 73, .3);
+    }
+
+    .badge-high {
+      background: rgba(240, 136, 62, .12);
+      color: var(--orange);
+      border: 1px solid rgba(240, 136, 62, .3);
+    }
+
+    .badge-medium {
+      background: rgba(210, 153, 34, .12);
+      color: var(--yellow);
+      border: 1px solid rgba(210, 153, 34, .3);
+    }
+
+    .badge-low {
+      background: rgba(88, 166, 255, .1);
+      color: var(--blue);
+      border: 1px solid rgba(88, 166, 255, .25);
+    }
+
+    .badge-ok {
+      background: rgba(63, 185, 80, .1);
+      color: var(--green);
+      border: 1px solid rgba(63, 185, 80, .25);
+    }
+
+    .badge-allow {
+      background: rgba(63, 185, 80, .1);
+      color: var(--green);
+      border: 1px solid rgba(63, 185, 80, .25);
+    }
+
+    .badge-deny {
+      background: rgba(248, 81, 73, .1);
+      color: var(--red);
+      border: 1px solid rgba(248, 81, 73, .25);
+    }
+
+    .badge-config {
+      background: rgba(188, 140, 255, .1);
+      color: var(--purple);
+      border: 1px solid rgba(188, 140, 255, .25);
+    }
+
+    .feed {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    .feed-item {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .feed-item:last-child {
+      border-bottom: none;
+    }
+
+    .feed-time {
+      font-size: 11px;
+      color: var(--blue);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .feed-date {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .feed-proj {
+      font-size: 11px;
+      color: var(--purple);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .feed-prompt {
+      font-size: 12px;
+      color: var(--text);
+      opacity: .85;
+    }
+
+    .mono {
+      font-family: 'SF Mono', 'Fira Code', Menlo, monospace;
+      font-size: 11px;
+    }
+
+    td code {
+      font-size: 11px;
+      background: rgba(255, 255, 255, .06);
+      padding: 1px 5px;
+      border-radius: 3px;
+      word-break: break-all;
+    }
+
+    .reason {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    #last-updated {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media(max-width:900px) {
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- ── Shared nav ───────────────────────────────────────────────────────── -->
-<nav class="monitor-nav">
-  <a href="/" class="mnav-logo">
-    <span class="mnav-dot" id="mnav-dot"></span>
-    AIGuard
-  </a>
-  <div class="mnav-right">
-    <span id="last-updated"></span>
-    <div id="nav-conn-pill" style="display:none">
-      <span class="dot"></span>
-      <span id="conn-label">connecting…</span>
-    </div>
-    <a href="/" class="mnav-link">← Home</a>
-    <a href="https://github.com/eternalsayed/ai-monitor" class="mnav-link" target="_blank">GitHub</a>
-  </div>
-</nav>
-
-<!-- ── Screen: Checking ────────────────────────────────────────────────── -->
-<div class="center-screen active" id="screen-checking">
-  <div class="waiting">
-    <span class="waiting-dot"></span>
-    <span>Checking for agent…</span>
-  </div>
-</div>
-
-<!-- ── Screen: Install ─────────────────────────────────────────────────── -->
-<div class="center-screen" id="screen-install">
-  <div class="screen-icon">🔌</div>
-  <h1 class="screen-title">Install the agent</h1>
-  <p class="screen-sub">One command installs a tiny local daemon that monitors Claude Code, Codex, Gemini CLI, and more — streaming data directly to this page.</p>
-
-  <div class="install-card">
-    <h3>Run in your terminal</h3>
-    <div class="cmd-box">
-      <code id="install-cmd"></code>
-      <button class="copy-btn" onclick="copyInstall()">Copy</button>
-    </div>
-    <div class="install-steps">
-      <div class="istep"><span class="istep-num">1</span><span>Downloads a single Node.js file (~15 KB) to <code>~/.aiguard/agent.js</code></span></div>
-      <div class="istep"><span class="istep-num">2</span><span>Starts it as a background process on port 4242 (<code>127.0.0.1</code> only — not internet-accessible)</span></div>
-      <div class="istep"><span class="istep-num">3</span><span>Registers with launchd (macOS) or systemd (Linux) so it restarts on login</span></div>
-    </div>
-
-    <div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
-      <span style="font-size:11px;color:var(--muted)">📁 ~15 KB on disk</span>
-      <span style="font-size:11px;color:var(--muted)">·</span>
-      <span style="font-size:11px;color:var(--muted)">🧠 35–50 MB RAM</span>
-      <span style="font-size:11px;color:var(--muted)">·</span>
-      <span style="font-size:11px;color:var(--muted)">⚡ &lt;0.1% CPU when idle</span>
-      <span style="font-size:11px;color:var(--muted)">·</span>
-      <span style="font-size:11px;color:var(--muted)">🔒 127.0.0.1:4242 only</span>
-      <span style="font-size:11px;color:var(--muted)">·</span>
-      <span style="font-size:11px;color:var(--muted)">📡 1 outbound req/hr (version check)</span>
-    </div>
-
-    <details style="margin-top:18px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px">
-        <span style="font-size:10px">▶</span> What exactly does this script do?
-      </summary>
-      <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--muted)">
-        <div><strong style="color:var(--text)">Reads (metadata only):</strong> session file sizes &amp; timestamps from <code>~/.claude/</code>, <code>~/.gemini/</code>, <code>~/.codex/</code> — never conversation content</div>
-        <div><strong style="color:var(--text)">Reads:</strong> permission settings from <code>.claude/settings.json</code>, <code>.codex/config.json</code>, and <code>.cursor/settings.json</code> in your projects</div>
-        <div><strong style="color:var(--text)">Runs:</strong> <code>ps aux</code> to list AI agent processes, and <code>lsof -i</code> to list their network connections</div>
-        <div><strong style="color:var(--text)">Never reads:</strong> conversation content, API keys, tokens, or any <code>.env</code> files</div>
-        <div><strong style="color:var(--text)">Never sends:</strong> any data externally — one outbound call is a version check to <code>/version.json</code></div>
-        <div><strong style="color:var(--text)">Uninstall:</strong> <code>kill $(cat ~/.aiguard/agent.pid) &amp;&amp; rm -rf ~/.aiguard</code></div>
+  <!-- ── Shared nav ───────────────────────────────────────────────────────── -->
+  <nav class="monitor-nav">
+    <a href="/" class="mnav-logo">
+      <span class="mnav-dot" id="mnav-dot"></span>
+      AISentry
+    </a>
+    <div class="mnav-right">
+      <span id="last-updated"></span>
+      <div id="nav-conn-pill" style="display:none">
+        <span class="dot"></span>
+        <span id="conn-label">connecting…</span>
       </div>
-    </details>
-  </div>
-
-  <div id="install-waiting" class="waiting">
-    <span class="waiting-dot"></span>
-    <span id="install-waiting-text">Waiting for agent on localhost:4242…</span>
-  </div>
-
-  <p class="privacy-note">
-    The agent binds to <code>127.0.0.1</code> only. Data streams from your machine to your browser tab — not through this site.
-    <a href="https://github.com/eternalsayed/ai-monitor" target="_blank">Read the source.</a>
-  </p>
-</div>
-
-<!-- ── Screen: Restart ─────────────────────────────────────────────────── -->
-<div class="center-screen" id="screen-restart">
-  <div class="screen-icon">⏸</div>
-  <h1 class="screen-title">Agent isn't running</h1>
-  <p class="screen-sub">We found a previous installation but the agent isn't responding on port 4242. Start it back up:</p>
-
-  <div class="install-card">
-    <h3>If you have the aliases installed</h3>
-    <div class="cmd-box">
-      <code>as-start</code>
-      <button class="copy-btn" onclick="copyText('as-start', this)">Copy</button>
+      <a href="/" class="mnav-link">← Home</a>
+      <a href="https://github.com/eternalsayed/ai-guard" class="mnav-link" target="_blank">GitHub</a>
     </div>
-    <div style="margin-top:10px">
+  </nav>
+
+  <!-- ── Screen: Checking ────────────────────────────────────────────────── -->
+  <div class="center-screen active" id="screen-checking">
+    <div class="waiting">
+      <span class="waiting-dot"></span>
+      <span>Checking for agent…</span>
+    </div>
+  </div>
+
+  <!-- ── Screen: Install ─────────────────────────────────────────────────── -->
+  <div class="center-screen" id="screen-install">
+    <div class="screen-icon">🔌</div>
+    <h1 class="screen-title">Install the agent</h1>
+    <p class="screen-sub">One command installs a tiny local daemon that monitors Claude Code, Codex, Gemini CLI, and
+      more — streaming data directly to this page.</p>
+
+    <div class="install-card">
+      <h3>Run in your terminal</h3>
       <div class="cmd-box">
-        <code>as-restart</code>
-        <button class="copy-btn" onclick="copyText('as-restart', this)">Copy</button>
+        <code id="install-cmd"></code>
+        <button class="copy-btn" onclick="copyInstall()">Copy</button>
       </div>
+      <div class="install-steps">
+        <div class="istep"><span class="istep-num">1</span><span>Downloads a single Node.js file (~15 KB) to
+            <code>~/.aisentry/agent.js</code></span></div>
+        <div class="istep"><span class="istep-num">2</span><span>Starts it as a background process on port 4242
+            (<code>127.0.0.1</code> only — not internet-accessible)</span></div>
+        <div class="istep"><span class="istep-num">3</span><span>Registers with launchd (macOS) or systemd (Linux) so it
+            restarts on login</span></div>
+      </div>
+
+      <div
+        style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <span style="font-size:11px;color:var(--muted)">📁 ~15 KB on disk</span>
+        <span style="font-size:11px;color:var(--muted)">·</span>
+        <span style="font-size:11px;color:var(--muted)">🧠 35–50 MB RAM</span>
+        <span style="font-size:11px;color:var(--muted)">·</span>
+        <span style="font-size:11px;color:var(--muted)">⚡ &lt;0.1% CPU when idle</span>
+        <span style="font-size:11px;color:var(--muted)">·</span>
+        <span style="font-size:11px;color:var(--muted)">🔒 127.0.0.1:4242 only</span>
+        <span style="font-size:11px;color:var(--muted)">·</span>
+        <span style="font-size:11px;color:var(--muted)">📡 1 outbound req/hr (version check)</span>
+      </div>
+
+      <details style="margin-top:18px">
+        <summary
+          style="cursor:pointer;font-size:12px;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px">
+          <span style="font-size:10px">▶</span> What exactly does this script do?
+        </summary>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--muted)">
+          <div><strong style="color:var(--text)">Reads (metadata only):</strong> session file sizes &amp; timestamps
+            from <code>~/.claude/</code>, <code>~/.gemini/</code>, <code>~/.codex/</code> — never conversation content
+          </div>
+          <div><strong style="color:var(--text)">Reads:</strong> permission settings from
+            <code>.claude/settings.json</code>, <code>.codex/config.json</code>, and <code>.cursor/settings.json</code>
+            in your projects
+          </div>
+          <div><strong style="color:var(--text)">Runs:</strong> <code>ps aux</code> to list AI agent processes, and
+            <code>lsof -i</code> to list their network connections
+          </div>
+          <div><strong style="color:var(--text)">Never reads:</strong> conversation content, API keys, tokens, or any
+            <code>.env</code> files
+          </div>
+          <div><strong style="color:var(--text)">Never sends:</strong> any data externally — one outbound call is a
+            version check to <code>/version.json</code></div>
+          <div><strong style="color:var(--text)">Uninstall:</strong>
+            <code>kill $(cat ~/.AISentry/agent.pid) &amp;&amp; rm -rf ~/.AISentry</code>
+          </div>
+        </div>
+      </details>
     </div>
+
+    <div id="install-waiting" class="waiting">
+      <span class="waiting-dot"></span>
+      <span id="install-waiting-text">Waiting for agent on localhost:4242…</span>
+    </div>
+
+    <p class="privacy-note">
+      The agent binds to <code>127.0.0.1</code> only. Data streams from your machine to your browser tab — not through
+      this site.
+      <a href="https://github.com/eternalsayed/ai-guard" target="_blank">Read the source.</a>
+    </p>
   </div>
 
-  <div class="divider">or without aliases</div>
+  <!-- ── Screen: Restart ─────────────────────────────────────────────────── -->
+  <div class="center-screen" id="screen-restart">
+    <div class="screen-icon">⏸</div>
+    <h1 class="screen-title">Agent isn't running</h1>
+    <p class="screen-sub">We found a previous installation but the agent isn't responding on port 4242. Start it back
+      up:</p>
 
-  <div class="install-card" style="margin-top:4px">
-    <h3>Manual restart</h3>
-    <div class="cmd-box">
-      <code>PORT=4242 nohup node ~/.aiguard/agent.js &gt;&gt; ~/.aiguard/agent.log 2&gt;&amp;1 &amp;</code>
-      <button class="copy-btn" id="btn-manual-restart" onclick="copyRestart()">Copy</button>
+    <div class="install-card">
+      <h3>If you have the aliases installed</h3>
+      <div class="cmd-box">
+        <code>as-start</code>
+        <button class="copy-btn" onclick="copyText('as-start', this)">Copy</button>
+      </div>
+      <div style="margin-top:10px">
+        <div class="cmd-box">
+          <code>as-restart</code>
+          <button class="copy-btn" onclick="copyText('as-restart', this)">Copy</button>
+        </div>
+      </div>
     </div>
+
+    <div class="divider">or without aliases</div>
+
+    <div class="install-card" style="margin-top:4px">
+      <h3>Manual restart</h3>
+      <div class="cmd-box">
+        <code>PORT=4242 nohup node ~/.AISentry/agent.js &gt;&gt; ~/.AISentry/agent.log 2&gt;&amp;1 &amp;</code>
+        <button class="copy-btn" id="btn-manual-restart" onclick="copyRestart()">Copy</button>
+      </div>
+    </div>
+
+    <div class="divider">or re-run the full installer</div>
+
+    <div class="install-card" style="margin-top:4px">
+      <h3>Full reinstall (also updates to latest)</h3>
+      <div class="cmd-box">
+        <code id="reinstall-cmd"></code>
+        <button class="copy-btn" id="btn-reinstall" onclick="copyReinstall()">Copy</button>
+      </div>
+    </div>
+
+    <div id="restart-waiting" class="waiting">
+      <span class="waiting-dot"></span>
+      <span id="restart-waiting-text">Waiting for agent to come back…</span>
+    </div>
+
+    <button class="ghost-link" onclick="forgetInstall()">This isn't my machine — show the install screen
+      instead</button>
   </div>
 
-  <div class="divider">or re-run the full installer</div>
+  <!-- ── Screen: Dashboard ───────────────────────────────────────────────── -->
+  <div id="screen-dashboard">
+    <main>
+      <div id="update-banner">
+        <span>Agent update available → <code id="update-cmd"></code></span>
+      </div>
 
-  <div class="install-card" style="margin-top:4px">
-    <h3>Full reinstall (also updates to latest)</h3>
-    <div class="cmd-box">
-      <code id="reinstall-cmd"></code>
-      <button class="copy-btn" id="btn-reinstall" onclick="copyReinstall()">Copy</button>
-    </div>
+      <div class="alert-strip" id="alert-strip">
+        <strong>⚠ Alerts:</strong>&nbsp;<span id="alert-text"></span>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card" id="card-sessions">
+          <div class="label">Sessions today</div>
+          <div class="value" id="stat-sessions">—</div>
+          <div class="sub" id="stat-sessions-sub">—</div>
+        </div>
+        <div class="stat-card" id="card-hour">
+          <div class="label">This hour</div>
+          <div class="value" id="stat-hour">—</div>
+          <div class="sub">sessions last 60 min</div>
+        </div>
+        <div class="stat-card" id="card-mb">
+          <div class="label">Data today</div>
+          <div class="value" id="stat-mb">—</div>
+          <div class="sub">MB sent to Anthropic API</div>
+        </div>
+        <div class="stat-card" id="card-procs">
+          <div class="label">Claude processes</div>
+          <div class="value" id="stat-procs">—</div>
+          <div class="sub" id="stat-procs-sub">—</div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Session activity — last 24h</span><span
+              class="panel-badge" id="badge-timeline">—</span></div>
+          <div class="panel-body">
+            <div class="chart-wrap"><canvas id="chart-timeline"></canvas></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">By project</span><span class="panel-badge"
+              id="badge-projects">—</span></div>
+          <div class="panel-body">
+            <div class="chart-wrap"><canvas id="chart-projects"></canvas></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Risk summary</span><span class="panel-badge"
+              id="badge-risk">—</span></div>
+          <div class="panel-body">
+            <div class="chart-wrap"><canvas id="chart-risk"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Permission audit</span><span class="panel-badge"
+              id="badge-perms">—</span></div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Project</th>
+                  <th>Type</th>
+                  <th>Rule</th>
+                  <th>Risk</th>
+                </tr>
+              </thead>
+              <tbody id="table-perms"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Network connections</span><span class="panel-badge"
+              id="badge-net">—</span></div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Process</th>
+                  <th>Destination</th>
+                  <th>Flag</th>
+                  <th>Risk</th>
+                </tr>
+              </thead>
+              <tbody id="table-net"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Running processes</span><span class="panel-badge"
+              id="badge-procs">—</span></div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>PID</th>
+                  <th>Label</th>
+                  <th>CPU%</th>
+                  <th>MEM%</th>
+                  <th>Risk</th>
+                </tr>
+              </thead>
+              <tbody id="table-procs"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Recent activity</span><span class="panel-badge"
+              id="badge-activity">—</span></div>
+          <div class="panel-body" style="padding-top:8px;padding-bottom:8px">
+            <div class="feed" id="feed-activity"></div>
+          </div>
+        </div>
+      </div>
+    </main>
   </div>
 
-  <div id="restart-waiting" class="waiting">
-    <span class="waiting-dot"></span>
-    <span id="restart-waiting-text">Waiting for agent to come back…</span>
-  </div>
+  <script>
+    // ── Config ────────────────────────────────────────────────────────────────────
+    const AGENT_PORT = 4242;
+    const AGENT_ORIGIN = `http://localhost:${AGENT_PORT}`;
+    // __HOSTED_URL__ is replaced at build time by build.js.
+    // Falls back to window.location.origin when running via a local dev server.
+    const _raw = '__HOSTED_URL__';
+    const HOSTED_URL = _raw.startsWith('__') ? window.location.origin : _raw;
+    const LS_KEY = 'as_agent_seen';
 
-  <button class="ghost-link" onclick="forgetInstall()">This isn't my machine — show the install screen instead</button>
-</div>
+    // Inject dynamic URLs
+    document.getElementById('install-cmd').textContent = `curl -fsSL ${HOSTED_URL}/install.sh | bash`;
+    document.getElementById('reinstall-cmd').textContent = `curl -fsSL ${HOSTED_URL}/install.sh | bash`;
 
-<!-- ── Screen: Dashboard ───────────────────────────────────────────────── -->
-<div id="screen-dashboard">
-  <main>
-    <div id="update-banner">
-      <span>Agent update available → <code id="update-cmd"></code></span>
-    </div>
+    // ── State ─────────────────────────────────────────────────────────────────────
+    let sse = null;
+    let pollTimer = null;
+    let agentConnected = false;
+    let chartTimeline, chartProjects, chartRisk;
 
-    <div class="alert-strip" id="alert-strip">
-      <strong>⚠ Alerts:</strong>&nbsp;<span id="alert-text"></span>
-    </div>
+    // Was this agent ever seen on this browser?
+    const wasSeen = () => localStorage.getItem(LS_KEY) === '1';
+    const markSeen = () => localStorage.setItem(LS_KEY, '1');
 
-    <div class="stats-row">
-      <div class="stat-card" id="card-sessions"><div class="label">Sessions today</div><div class="value" id="stat-sessions">—</div><div class="sub" id="stat-sessions-sub">—</div></div>
-      <div class="stat-card" id="card-hour">    <div class="label">This hour</div>      <div class="value" id="stat-hour">—</div>    <div class="sub">sessions last 60 min</div></div>
-      <div class="stat-card" id="card-mb">      <div class="label">Data today</div>     <div class="value" id="stat-mb">—</div>      <div class="sub">MB sent to Anthropic API</div></div>
-      <div class="stat-card" id="card-procs">   <div class="label">Claude processes</div><div class="value" id="stat-procs">—</div>   <div class="sub" id="stat-procs-sub">—</div></div>
-    </div>
+    // ── Screen switching ──────────────────────────────────────────────────────────
+    const SCREENS = ['checking', 'install', 'restart', 'dashboard'];
+    function show(name) {
+      document.getElementById('screen-checking').classList.remove('active');
+      document.getElementById('screen-install').classList.remove('active');
+      document.getElementById('screen-restart').classList.remove('active');
+      document.getElementById('screen-dashboard').classList.remove('active');
 
-    <div class="grid-3">
-      <div class="panel">
-        <div class="panel-header"><span class="panel-title">Session activity — last 24h</span><span class="panel-badge" id="badge-timeline">—</span></div>
-        <div class="panel-body"><div class="chart-wrap"><canvas id="chart-timeline"></canvas></div></div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><span class="panel-title">By project</span><span class="panel-badge" id="badge-projects">—</span></div>
-        <div class="panel-body"><div class="chart-wrap"><canvas id="chart-projects"></canvas></div></div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><span class="panel-title">Risk summary</span><span class="panel-badge" id="badge-risk">—</span></div>
-        <div class="panel-body"><div class="chart-wrap"><canvas id="chart-risk"></canvas></div></div>
-      </div>
-    </div>
+      const el = document.getElementById(`screen-${name}`);
+      el.classList.add('active');
+      el.style.display = name === 'dashboard' ? 'block' : '';
 
-    <div class="grid-2">
-      <div class="panel">
-        <div class="panel-header"><span class="panel-title">Permission audit</span><span class="panel-badge" id="badge-perms">—</span></div>
-        <div style="overflow-x:auto"><table><thead><tr><th>Project</th><th>Type</th><th>Rule</th><th>Risk</th></tr></thead><tbody id="table-perms"></tbody></table></div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><span class="panel-title">Network connections</span><span class="panel-badge" id="badge-net">—</span></div>
-        <div style="overflow-x:auto"><table><thead><tr><th>Process</th><th>Destination</th><th>Flag</th><th>Risk</th></tr></thead><tbody id="table-net"></tbody></table></div>
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="panel">
-        <div class="panel-header"><span class="panel-title">Running processes</span><span class="panel-badge" id="badge-procs">—</span></div>
-        <div style="overflow-x:auto"><table><thead><tr><th>PID</th><th>Label</th><th>CPU%</th><th>MEM%</th><th>Risk</th></tr></thead><tbody id="table-procs"></tbody></table></div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><span class="panel-title">Recent activity</span><span class="panel-badge" id="badge-activity">—</span></div>
-        <div class="panel-body" style="padding-top:8px;padding-bottom:8px"><div class="feed" id="feed-activity"></div></div>
-      </div>
-    </div>
-  </main>
-</div>
-
-<script>
-// ── Config ────────────────────────────────────────────────────────────────────
-const AGENT_PORT   = 4242;
-const AGENT_ORIGIN = `http://localhost:${AGENT_PORT}`;
-// __HOSTED_URL__ is replaced at build time by build.js.
-// Falls back to window.location.origin when running via a local dev server.
-const _raw = '__HOSTED_URL__';
-const HOSTED_URL = _raw.startsWith('__') ? window.location.origin : _raw;
-const LS_KEY       = 'as_agent_seen';
-
-// Inject dynamic URLs
-document.getElementById('install-cmd').textContent   = `curl -fsSL ${HOSTED_URL}/install.sh | bash`;
-document.getElementById('reinstall-cmd').textContent  = `curl -fsSL ${HOSTED_URL}/install.sh | bash`;
-
-// ── State ─────────────────────────────────────────────────────────────────────
-let sse            = null;
-let pollTimer      = null;
-let agentConnected = false;
-let chartTimeline, chartProjects, chartRisk;
-
-// Was this agent ever seen on this browser?
-const wasSeen = () => localStorage.getItem(LS_KEY) === '1';
-const markSeen = () => localStorage.setItem(LS_KEY, '1');
-
-// ── Screen switching ──────────────────────────────────────────────────────────
-const SCREENS = ['checking','install','restart','dashboard'];
-function show(name) {
-  document.getElementById('screen-checking').classList.remove('active');
-  document.getElementById('screen-install').classList.remove('active');
-  document.getElementById('screen-restart').classList.remove('active');
-  document.getElementById('screen-dashboard').classList.remove('active');
-
-  const el = document.getElementById(`screen-${name}`);
-  el.classList.add('active');
-  el.style.display = name === 'dashboard' ? 'block' : '';
-
-  const pill = document.getElementById('nav-conn-pill');
-  const dot  = document.getElementById('mnav-dot');
-  if (name === 'dashboard') {
-    pill.style.display = 'flex';
-    dot.classList.add('live');
-  } else {
-    pill.style.display = 'none';
-    dot.classList.remove('live');
-  }
-}
-
-// ── Polling ────────────────────────────────────────────────────────────────────
-async function ping() {
-  try {
-    const r = await fetch(`${AGENT_ORIGIN}/ping`, { signal: AbortSignal.timeout(1200) });
-    if (!r.ok) return false;
-    const j = await r.json();
-    return j.ok === true;
-  } catch { return false; }
-}
-
-async function initialCheck() {
-  const alive = await ping();
-  if (alive) {
-    onAgentFound();
-  } else if (wasSeen()) {
-    show('restart');
-    startPolling();
-  } else {
-    show('install');
-    startPolling();
-  }
-}
-
-function startPolling() {
-  if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(async () => {
-    if (await ping()) {
-      clearInterval(pollTimer); pollTimer = null;
-      onAgentFound();
+      const pill = document.getElementById('nav-conn-pill');
+      const dot = document.getElementById('mnav-dot');
+      if (name === 'dashboard') {
+        pill.style.display = 'flex';
+        dot.classList.add('live');
+      } else {
+        pill.style.display = 'none';
+        dot.classList.remove('live');
+      }
     }
-  }, 2000);
-}
 
-function onAgentFound() {
-  markSeen();
-  const wt = document.getElementById('install-waiting-text');
-  const rw = document.getElementById('restart-waiting-text');
-  if (wt) { wt.textContent = 'Agent found — connecting…'; document.getElementById('install-waiting').classList.add('connected'); }
-  if (rw) { rw.textContent = 'Agent found — connecting…'; document.getElementById('restart-waiting').classList.add('connected'); }
-  setTimeout(() => { show('dashboard'); connectSSE(); }, 500);
-}
+    // ── Polling ────────────────────────────────────────────────────────────────────
+    async function ping() {
+      try {
+        const r = await fetch(`${AGENT_ORIGIN}/ping`, { signal: AbortSignal.timeout(1200) });
+        if (!r.ok) return false;
+        const j = await r.json();
+        return j.ok === true;
+      } catch { return false; }
+    }
 
-function forgetInstall() {
-  localStorage.removeItem(LS_KEY);
-  clearInterval(pollTimer); pollTimer = null;
-  show('install');
-  startPolling();
-}
-
-// ── SSE ────────────────────────────────────────────────────────────────────────
-function connectSSE() {
-  if (sse) { sse.close(); sse = null; }
-  sse = new EventSource(`${AGENT_ORIGIN}/events`);
-  sse.onopen = () => { agentConnected = true; setPill('live','live'); };
-  sse.onmessage = (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      render(data);
-      document.getElementById('last-updated').textContent = 'updated ' + new Date(data.ts).toLocaleTimeString('en-GB');
-    } catch {}
-  };
-  sse.onerror = () => {
-    agentConnected = false;
-    setPill('reconnecting','reconnecting…');
-    setTimeout(() => {
-      if (!agentConnected) {
-        sse.close(); sse = null;
+    async function initialCheck() {
+      const alive = await ping();
+      if (alive) {
+        onAgentFound();
+      } else if (wasSeen()) {
         show('restart');
         startPolling();
+      } else {
+        show('install');
+        startPolling();
       }
-    }, 10000);
-  };
-}
+    }
 
-function setPill(cls, label) {
-  const pill = document.getElementById('nav-conn-pill');
-  pill.className = cls;
-  document.getElementById('conn-label').textContent = label;
-}
+    function startPolling() {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(async () => {
+        if (await ping()) {
+          clearInterval(pollTimer); pollTimer = null;
+          onAgentFound();
+        }
+      }, 2000);
+    }
 
-// ── Copy helpers ───────────────────────────────────────────────────────────────
-function copyInstall()   { copyText(document.getElementById('install-cmd').textContent,    document.querySelector('#screen-install .copy-btn')); }
-function copyRestart()   { copyText(`PORT=4242 nohup node ~/.aiguard/agent.js >> ~/.aiguard/agent.log 2>&1 &`, document.getElementById('btn-manual-restart')); }
-function copyReinstall() { copyText(document.getElementById('reinstall-cmd').textContent,  document.getElementById('btn-reinstall')); }
+    function onAgentFound() {
+      markSeen();
+      const wt = document.getElementById('install-waiting-text');
+      const rw = document.getElementById('restart-waiting-text');
+      if (wt) { wt.textContent = 'Agent found — connecting…'; document.getElementById('install-waiting').classList.add('connected'); }
+      if (rw) { rw.textContent = 'Agent found — connecting…'; document.getElementById('restart-waiting').classList.add('connected'); }
+      setTimeout(() => { show('dashboard'); connectSSE(); }, 500);
+    }
 
-function copyText(text, btn) {
-  navigator.clipboard.writeText(text).then(() => {
-    const orig = btn.textContent; btn.textContent = 'Copied!'; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
-  });
-}
+    function forgetInstall() {
+      localStorage.removeItem(LS_KEY);
+      clearInterval(pollTimer); pollTimer = null;
+      show('install');
+      startPolling();
+    }
 
-// ── Charts ─────────────────────────────────────────────────────────────────────
-const CHART_BASE = {
-  responsive: true, maintainAspectRatio: false,
-  plugins: { legend:{display:false}, tooltip:{backgroundColor:'#1c2128',titleColor:'#e6edf3',bodyColor:'#8b949e',borderColor:'#30363d',borderWidth:1} },
-};
+    // ── SSE ────────────────────────────────────────────────────────────────────────
+    function connectSSE() {
+      if (sse) { sse.close(); sse = null; }
+      sse = new EventSource(`${AGENT_ORIGIN}/events`);
+      sse.onopen = () => { agentConnected = true; setPill('live', 'live'); };
+      sse.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          render(data);
+          document.getElementById('last-updated').textContent = 'updated ' + new Date(data.ts).toLocaleTimeString('en-GB');
+        } catch { }
+      };
+      sse.onerror = () => {
+        agentConnected = false;
+        setPill('reconnecting', 'reconnecting…');
+        setTimeout(() => {
+          if (!agentConnected) {
+            sse.close(); sse = null;
+            show('restart');
+            startPolling();
+          }
+        }, 10000);
+      };
+    }
 
-function mkTimeline(labels, data) {
-  const ctx = document.getElementById('chart-timeline').getContext('2d');
-  if (chartTimeline) chartTimeline.destroy();
-  chartTimeline = new Chart(ctx, {
-    type:'line',
-    data:{ labels, datasets:[{data, borderColor:'#58a6ff', backgroundColor:'rgba(88,166,255,.08)', borderWidth:2, pointRadius:3, pointHoverRadius:5, fill:true, tension:.3}] },
-    options:{ ...CHART_BASE, scales:{ x:{ticks:{color:'#8b949e',font:{size:10},maxTicksLimit:8},grid:{color:'#21262d'}}, y:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'#21262d'},beginAtZero:true} } },
-  });
-}
+    function setPill(cls, label) {
+      const pill = document.getElementById('nav-conn-pill');
+      pill.className = cls;
+      document.getElementById('conn-label').textContent = label;
+    }
 
-function mkProjects(labels, data) {
-  const ctx = document.getElementById('chart-projects').getContext('2d');
-  if (chartProjects) chartProjects.destroy();
-  const colors = ['#58a6ff','#3fb950','#bc8cff','#f0883e','#d29922','#39d353','#ff7b72','#79c0ff'];
-  chartProjects = new Chart(ctx, {
-    type:'bar',
-    data:{ labels, datasets:[{data, backgroundColor:colors.slice(0,labels.length), borderRadius:4, borderSkipped:false}] },
-    options:{ ...CHART_BASE, indexAxis:'y', scales:{ x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'#21262d'},beginAtZero:true}, y:{ticks:{color:'#8b949e',font:{size:10}},grid:{display:false}} } },
-  });
-}
+    // ── Copy helpers ───────────────────────────────────────────────────────────────
+    function copyInstall() { copyText(document.getElementById('install-cmd').textContent, document.querySelector('#screen-install .copy-btn')); }
+    function copyRestart() { copyText(`PORT=4242 nohup node ~/.AISentry/agent.js >> ~/.AISentry/agent.log 2>&1 &`, document.getElementById('btn-manual-restart')); }
+    function copyReinstall() { copyText(document.getElementById('reinstall-cmd').textContent, document.getElementById('btn-reinstall')); }
 
-function mkRisk(counts) {
-  const ctx = document.getElementById('chart-risk').getContext('2d');
-  if (chartRisk) chartRisk.destroy();
-  const labels = ['Critical','High','Medium','Low','OK'];
-  const colors = ['#f85149','#f0883e','#d29922','#58a6ff','#3fb950'];
-  const data   = [counts.critical||0,counts.high||0,counts.medium||0,counts.low||0,counts.ok||0];
-  if (data.every(v=>v===0)) data[4]=1;
-  chartRisk = new Chart(ctx, {
-    type:'doughnut',
-    data:{ labels, datasets:[{data, backgroundColor:colors, borderColor:'#161b22', borderWidth:3, hoverOffset:6}] },
-    options:{ ...CHART_BASE, cutout:'65%', plugins:{...CHART_BASE.plugins,legend:{display:true,position:'right',labels:{color:'#8b949e',font:{size:11},boxWidth:10,padding:8}}} },
-  });
-}
+    function copyText(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent; btn.textContent = 'Copied!'; btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+      });
+    }
 
-// ── Render ─────────────────────────────────────────────────────────────────────
-function render(d) {
-  renderUpdate(d);
-  renderStats(d.stats, d.processes);
-  renderTimeline(d.hourBuckets);
-  renderProjects(d.projects);
-  renderRisk(d.permissions);
-  renderPermissions(d.permissions);
-  renderNetwork(d.network);
-  renderProcesses(d.processes);
-  renderActivity(d.recentActivity);
-  renderAlerts(d);
-}
+    // ── Charts ─────────────────────────────────────────────────────────────────────
+    const CHART_BASE = {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1c2128', titleColor: '#e6edf3', bodyColor: '#8b949e', borderColor: '#30363d', borderWidth: 1 } },
+    };
 
-function renderUpdate(d) {
-  const b = document.getElementById('update-banner');
-  if (d.updateAvailable) { document.getElementById('update-cmd').textContent=`curl -fsSL ${HOSTED_URL}/install.sh | bash`; b.classList.add('show'); }
-  else b.classList.remove('show');
-}
+    function mkTimeline(labels, data) {
+      const ctx = document.getElementById('chart-timeline').getContext('2d');
+      if (chartTimeline) chartTimeline.destroy();
+      chartTimeline = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: [{ data, borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,.08)', borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, fill: true, tension: .3 }] },
+        options: { ...CHART_BASE, scales: { x: { ticks: { color: '#8b949e', font: { size: 10 }, maxTicksLimit: 8 }, grid: { color: '#21262d' } }, y: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' }, beginAtZero: true } } },
+      });
+    }
 
-function renderStats(stats, procs) {
-  const s=stats.sessionsToday||0, h=stats.sessionsThisHour||0;
-  el('stat-sessions').textContent = s;
-  el('stat-sessions-sub').textContent = `across ${stats.projectsActive||0} projects`;
-  el('stat-hour').textContent = h;
-  el('stat-mb').textContent = stats.mbToday||'0';
-  el('stat-procs').textContent = procs.length;
-  const flagged=procs.filter(p=>p.risk!=='ok');
-  el('stat-procs-sub').textContent = flagged.length ? `${flagged.length} flagged` : 'all expected';
-  cardClass('card-sessions', s>100?'alert':s>20?'warn':'ok');
-  cardClass('card-hour',     h>20 ?'alert':h>5 ?'warn':'ok');
-  cardClass('card-mb',       stats.mbToday>50?'alert':stats.mbToday>10?'warn':'ok');
-  cardClass('card-procs',    flagged.length>0?'warn':'ok');
-}
+    function mkProjects(labels, data) {
+      const ctx = document.getElementById('chart-projects').getContext('2d');
+      if (chartProjects) chartProjects.destroy();
+      const colors = ['#58a6ff', '#3fb950', '#bc8cff', '#f0883e', '#d29922', '#39d353', '#ff7b72', '#79c0ff'];
+      chartProjects = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length), borderRadius: 4, borderSkipped: false }] },
+        options: { ...CHART_BASE, indexAxis: 'y', scales: { x: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' }, beginAtZero: true }, y: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { display: false } } } },
+      });
+    }
 
-function renderTimeline(buckets) {
-  mkTimeline(buckets.map(b=>b.label),buckets.map(b=>b.count));
-  el('badge-timeline').textContent=buckets.reduce((a,b)=>a+b.count,0)+' total';
-}
+    function mkRisk(counts) {
+      const ctx = document.getElementById('chart-risk').getContext('2d');
+      if (chartRisk) chartRisk.destroy();
+      const labels = ['Critical', 'High', 'Medium', 'Low', 'OK'];
+      const colors = ['#f85149', '#f0883e', '#d29922', '#58a6ff', '#3fb950'];
+      const data = [counts.critical || 0, counts.high || 0, counts.medium || 0, counts.low || 0, counts.ok || 0];
+      if (data.every(v => v === 0)) data[4] = 1;
+      chartRisk = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: '#161b22', borderWidth: 3, hoverOffset: 6 }] },
+        options: { ...CHART_BASE, cutout: '65%', plugins: { ...CHART_BASE.plugins, legend: { display: true, position: 'right', labels: { color: '#8b949e', font: { size: 11 }, boxWidth: 10, padding: 8 } } } },
+      });
+    }
 
-function renderProjects(projects) {
-  if (!projects.length) { mkProjects(['no data'],[0]); return; }
-  const top=projects.slice(0,7);
-  mkProjects(top.map(p=>p.name.length>18?'…'+p.name.slice(-16):p.name),top.map(p=>p.count));
-  el('badge-projects').textContent=projects.length+' projects';
-}
+    // ── Render ─────────────────────────────────────────────────────────────────────
+    function render(d) {
+      renderUpdate(d);
+      renderStats(d.stats, d.processes);
+      renderTimeline(d.hourBuckets);
+      renderProjects(d.projects);
+      renderRisk(d.permissions);
+      renderPermissions(d.permissions);
+      renderNetwork(d.network);
+      renderProcesses(d.processes);
+      renderActivity(d.recentActivity);
+      renderAlerts(d);
+    }
 
-function renderRisk(perms) {
-  const c={critical:0,high:0,medium:0,low:0,ok:0};
-  perms.forEach(p=>c[p.risk]=(c[p.risk]||0)+1);
-  mkRisk(c);
-  const f=(c.critical||0)+(c.high||0)+(c.medium||0);
-  el('badge-risk').textContent=f?`${f} flagged`:'all clear';
-}
+    function renderUpdate(d) {
+      const b = document.getElementById('update-banner');
+      if (d.updateAvailable) { document.getElementById('update-cmd').textContent = `curl -fsSL ${HOSTED_URL}/install.sh | bash`; b.classList.add('show'); }
+      else b.classList.remove('show');
+    }
 
-function renderPermissions(perms) {
-  const tbody=el('table-perms');
-  if (!perms.length){tbody.innerHTML=`<tr><td colspan="4" class="empty">No settings files found</td></tr>`;return;}
-  tbody.innerHTML=perms.map(p=>`
+    function renderStats(stats, procs) {
+      const s = stats.sessionsToday || 0, h = stats.sessionsThisHour || 0;
+      el('stat-sessions').textContent = s;
+      el('stat-sessions-sub').textContent = `across ${stats.projectsActive || 0} projects`;
+      el('stat-hour').textContent = h;
+      el('stat-mb').textContent = stats.mbToday || '0';
+      el('stat-procs').textContent = procs.length;
+      const flagged = procs.filter(p => p.risk !== 'ok');
+      el('stat-procs-sub').textContent = flagged.length ? `${flagged.length} flagged` : 'all expected';
+      cardClass('card-sessions', s > 100 ? 'alert' : s > 20 ? 'warn' : 'ok');
+      cardClass('card-hour', h > 20 ? 'alert' : h > 5 ? 'warn' : 'ok');
+      cardClass('card-mb', stats.mbToday > 50 ? 'alert' : stats.mbToday > 10 ? 'warn' : 'ok');
+      cardClass('card-procs', flagged.length > 0 ? 'warn' : 'ok');
+    }
+
+    function renderTimeline(buckets) {
+      mkTimeline(buckets.map(b => b.label), buckets.map(b => b.count));
+      el('badge-timeline').textContent = buckets.reduce((a, b) => a + b.count, 0) + ' total';
+    }
+
+    function renderProjects(projects) {
+      if (!projects.length) { mkProjects(['no data'], [0]); return; }
+      const top = projects.slice(0, 7);
+      mkProjects(top.map(p => p.name.length > 18 ? '…' + p.name.slice(-16) : p.name), top.map(p => p.count));
+      el('badge-projects').textContent = projects.length + ' projects';
+    }
+
+    function renderRisk(perms) {
+      const c = { critical: 0, high: 0, medium: 0, low: 0, ok: 0 };
+      perms.forEach(p => c[p.risk] = (c[p.risk] || 0) + 1);
+      mkRisk(c);
+      const f = (c.critical || 0) + (c.high || 0) + (c.medium || 0);
+      el('badge-risk').textContent = f ? `${f} flagged` : 'all clear';
+    }
+
+    function renderPermissions(perms) {
+      const tbody = el('table-perms');
+      if (!perms.length) { tbody.innerHTML = `<tr><td colspan="4" class="empty">No settings files found</td></tr>`; return; }
+      tbody.innerHTML = perms.map(p => `
     <tr>
       <td class="mono" style="color:var(--muted);white-space:nowrap">${esc(p.project)}</td>
       <td><span class="badge badge-${p.type}">${esc(p.type)}</span></td>
-      <td><code>${esc(p.rule)}</code>${p.reason?`<br><span class="reason">${esc(p.reason)}</span>`:''}</td>
+      <td><code>${esc(p.rule)}</code>${p.reason ? `<br><span class="reason">${esc(p.reason)}</span>` : ''}</td>
       <td>${badge(p.risk)}</td>
     </tr>`).join('');
-  const f=perms.filter(p=>['critical','high'].includes(p.risk)).length;
-  el('badge-perms').textContent=f?`${f} critical/high`:`${perms.length} rules`;
-}
+      const f = perms.filter(p => ['critical', 'high'].includes(p.risk)).length;
+      el('badge-perms').textContent = f ? `${f} critical/high` : `${perms.length} rules`;
+    }
 
-function renderNetwork(net) {
-  const tbody=el('table-net');
-  if (!net.length){tbody.innerHTML=`<tr><td colspan="4" class="empty">No connections found</td></tr>`;return;}
-  tbody.innerHTML=net.map(n=>`
+    function renderNetwork(net) {
+      const tbody = el('table-net');
+      if (!net.length) { tbody.innerHTML = `<tr><td colspan="4" class="empty">No connections found</td></tr>`; return; }
+      tbody.innerHTML = net.map(n => `
     <tr>
       <td class="mono">${esc(n.proc)} <span style="color:var(--muted)">(${esc(n.pid)})</span></td>
       <td class="mono" style="word-break:break-all;max-width:200px">${esc(n.dest)}</td>
-      <td style="color:var(--muted)">${esc(n.flag||'')}</td>
+      <td style="color:var(--muted)">${esc(n.flag || '')}</td>
       <td>${badge(n.risk)}</td>
     </tr>`).join('');
-  const f=net.filter(n=>n.risk!=='ok').length;
-  el('badge-net').textContent=f?`${f} flagged`:`${net.length} connections`;
-}
+      const f = net.filter(n => n.risk !== 'ok').length;
+      el('badge-net').textContent = f ? `${f} flagged` : `${net.length} connections`;
+    }
 
-function renderProcesses(procs) {
-  const tbody=el('table-procs');
-  if (!procs.length){tbody.innerHTML=`<tr><td colspan="5" class="empty">No claude processes found</td></tr>`;return;}
-  [...procs].sort((a,b)=>({high:0,medium:1,ok:2}[a.risk]??3)-({high:0,medium:1,ok:2}[b.risk]??3));
-  tbody.innerHTML=procs.map(p=>`
+    function renderProcesses(procs) {
+      const tbody = el('table-procs');
+      if (!procs.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty">No claude processes found</td></tr>`; return; }
+      [...procs].sort((a, b) => ({ high: 0, medium: 1, ok: 2 }[a.risk] ?? 3) - ({ high: 0, medium: 1, ok: 2 }[b.risk] ?? 3));
+      tbody.innerHTML = procs.map(p => `
     <tr title="${esc(p.cmd)}">
       <td class="mono" style="color:var(--muted)">${esc(p.pid)}</td>
       <td>${esc(p.label)}</td>
-      <td style="color:${p.cpu>10?'var(--orange)':'var(--muted)'}">${p.cpu.toFixed(1)}</td>
+      <td style="color:${p.cpu > 10 ? 'var(--orange)' : 'var(--muted)'}">${p.cpu.toFixed(1)}</td>
       <td style="color:var(--muted)">${p.mem.toFixed(1)}</td>
       <td>${badge(p.risk)}</td>
     </tr>`).join('');
-  el('badge-procs').textContent=procs.length;
-}
+      el('badge-procs').textContent = procs.length;
+    }
 
-function renderActivity(items) {
-  const feed=el('feed-activity');
-  if (!items.length){feed.innerHTML=`<div class="empty">No recent activity</div>`;return;}
-  feed.innerHTML=items.map(i=>`
+    function renderActivity(items) {
+      const feed = el('feed-activity');
+      if (!items.length) { feed.innerHTML = `<div class="empty">No recent activity</div>`; return; }
+      feed.innerHTML = items.map(i => `
     <div class="feed-item">
       <div><div class="feed-time">${esc(i.time)}</div><div class="feed-date">${esc(i.date)}</div></div>
       <div><div class="feed-proj">${esc(i.project)}</div><div class="feed-prompt">${esc(i.prompt)}</div></div>
     </div>`).join('');
-  el('badge-activity').textContent=items.length+' recent';
-}
+      el('badge-activity').textContent = items.length + ' recent';
+    }
 
-function renderAlerts(d) {
-  const alerts=[];
-  const ch=(d.permissions||[]).filter(p=>['critical','high'].includes(p.risk)).length;
-  const bp=(d.processes||[]).filter(p=>p.risk==='high').length;
-  const bn=(d.network||[]).filter(n=>n.risk==='high').length;
-  if(ch) alerts.push(`${ch} critical/high permission rule${ch>1?'s':''}`);
-  if(bp) alerts.push(`${bp} high-risk process${bp>1?'es':''} running`);
-  if(bn) alerts.push(`${bn} unknown outbound connection${bn>1?'s':''}`);
-  if((d.stats?.sessionsThisHour||0)>15) alerts.push(`Surge: ${d.stats.sessionsThisHour} sessions in the last hour`);
-  const strip=el('alert-strip');
-  if(alerts.length){el('alert-text').textContent=alerts.join('  ·  ');strip.classList.add('show');}
-  else strip.classList.remove('show');
-}
+    function renderAlerts(d) {
+      const alerts = [];
+      const ch = (d.permissions || []).filter(p => ['critical', 'high'].includes(p.risk)).length;
+      const bp = (d.processes || []).filter(p => p.risk === 'high').length;
+      const bn = (d.network || []).filter(n => n.risk === 'high').length;
+      if (ch) alerts.push(`${ch} critical/high permission rule${ch > 1 ? 's' : ''}`);
+      if (bp) alerts.push(`${bp} high-risk process${bp > 1 ? 'es' : ''} running`);
+      if (bn) alerts.push(`${bn} unknown outbound connection${bn > 1 ? 's' : ''}`);
+      if ((d.stats?.sessionsThisHour || 0) > 15) alerts.push(`Surge: ${d.stats.sessionsThisHour} sessions in the last hour`);
+      const strip = el('alert-strip');
+      if (alerts.length) { el('alert-text').textContent = alerts.join('  ·  '); strip.classList.add('show'); }
+      else strip.classList.remove('show');
+    }
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-function el(id)   { return document.getElementById(id); }
-function esc(s)   { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function badge(r) { return `<span class="badge badge-${r}">${r}</span>`; }
-function cardClass(id,cls) { const c=el(id); c.classList.remove('alert','warn','ok'); c.classList.add(cls); }
+    // ── Helpers ────────────────────────────────────────────────────────────────────
+    function el(id) { return document.getElementById(id); }
+    function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function badge(r) { return `<span class="badge badge-${r}">${r}</span>`; }
+    function cardClass(id, cls) { const c = el(id); c.classList.remove('alert', 'warn', 'ok'); c.classList.add(cls); }
 
-// ── Boot ───────────────────────────────────────────────────────────────────────
-initialCheck();
-</script>
+    // ── Boot ───────────────────────────────────────────────────────────────────────
+    initialCheck();
+  </script>
 </body>
+
 </html>

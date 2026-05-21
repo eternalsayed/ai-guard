@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# AIGuard — local monitoring agent installer
+# AISentry — local monitoring agent installer
 # Monitors Claude Code, Codex, Gemini CLI, Aider, and other AI coding agents.
-# Source: https://YOUR_SITE.netlify.app
+# Source: https://aisentry.netlify.app
 #
 # What this script does:
-#   1. Downloads a single Node.js file (~15 KB) to ~/.aiguard/agent.js
+#   1. Downloads a single Node.js file (~15 KB) to ~/.aisentry/agent.js
 #   2. Kills any previously running instance of the agent
 #   3. Starts the agent as a background process on port 4242 (127.0.0.1 only)
 #   4. On macOS: registers a launchd agent so it starts automatically on login
@@ -16,14 +16,14 @@
 #   - It does not modify your Claude/Codex/Gemini configuration files
 #
 # Uninstall:
-#   kill $(cat ~/.aiguard/agent.pid) 2>/dev/null
-#   rm -rf ~/.aiguard
-#   # macOS: launchctl unload ~/Library/LaunchAgents/com.aiguard.agent.plist && rm ~/Library/LaunchAgents/com.aiguard.agent.plist
-#   # Linux: systemctl --user disable aiguard && rm ~/.config/systemd/user/aiguard.service
+#   kill $(cat ~/.aisentry/agent.pid) 2>/dev/null
+#   rm -rf ~/.aisentry
+#   # macOS: launchctl unload ~/Library/LaunchAgents/com.aisentry.agent.plist && rm ~/Library/LaunchAgents/com.aisentry.agent.plist
+#   # Linux: systemctl --user disable aisentry && rm ~/.config/systemd/user/aisentry.service
 set -euo pipefail
 
 HOSTED_URL="__HOSTED_URL__"
-AGENT_DIR="$HOME/.aiguard"
+AGENT_DIR="$HOME/.aisentry"
 AGENT_PATH="$AGENT_DIR/agent.js"
 LOG_FILE="$AGENT_DIR/agent.log"
 PID_FILE="$AGENT_DIR/agent.pid"
@@ -31,7 +31,7 @@ PORT="${PORT:-4242}"
 
 bold=$'\e[1m'; green=$'\e[32m'; yellow=$'\e[33m'; cyan=$'\e[36m'; dim=$'\e[2m'; reset=$'\e[0m'
 
-header() { echo; echo "${bold}${cyan}AIGuard — Installer${reset}"; echo "${dim}${HOSTED_URL}${reset}"; echo; }
+header() { echo; echo "${bold}${cyan}AISentry — Installer${reset}"; echo "${dim}${HOSTED_URL}${reset}"; echo; }
 ok()     { echo "  ${green}✓${reset}  $1"; }
 warn()   { echo "  ${yellow}!${reset}  $1"; }
 die()    { echo "  ✗  $1" >&2; exit 1; }
@@ -67,7 +67,7 @@ chmod +x "$AGENT_PATH"
 ok "Agent downloaded to $AGENT_PATH"
 
 # ── Launch ────────────────────────────────────────────────────────────────────
-PORT="$PORT" AIGUARD_HOST="$HOSTED_URL" nohup node "$AGENT_PATH" >> "$LOG_FILE" 2>&1 &
+PORT="$PORT" AISENTRY_HOST="$HOSTED_URL" nohup node "$AGENT_PATH" >> "$LOG_FILE" 2>&1 &
 AGENT_PID=$!
 echo "$AGENT_PID" > "$PID_FILE"
 
@@ -79,19 +79,19 @@ ok "Agent started (PID $AGENT_PID) on port $PORT"
 
 # ── macOS: register with launchd ──────────────────────────────────────────────
 if [ "$(uname)" = "Darwin" ]; then
-  PLIST="$HOME/Library/LaunchAgents/com.aiguard.agent.plist"
+  PLIST="$HOME/Library/LaunchAgents/com.aisentry.agent.plist"
   NODE_BIN=$(command -v node)
   cat > "$PLIST" << PLIST_EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>Label</key>              <string>com.aiguard.agent</string>
+  <key>Label</key>              <string>com.aisentry.agent</string>
   <key>ProgramArguments</key>  <array><string>$NODE_BIN</string><string>$AGENT_PATH</string></array>
   <key>EnvironmentVariables</key>
     <dict>
       <key>PORT</key>              <string>$PORT</string>
-      <key>AIGUARD_HOST</key>   <string>$HOSTED_URL</string>
+      <key>AISENTRY_HOST</key>   <string>$HOSTED_URL</string>
     </dict>
   <key>RunAtLoad</key>         <false/>
   <key>KeepAlive</key>         <false/>
@@ -109,16 +109,16 @@ if [ "$(uname)" = "Linux" ] && command -v systemctl >/dev/null 2>&1; then
   NODE_BIN=$(command -v node)
   UNIT_DIR="$HOME/.config/systemd/user"
   mkdir -p "$UNIT_DIR"
-  cat > "$UNIT_DIR/aiguard.service" << UNIT_EOF
+  cat > "$UNIT_DIR/aisentry.service" << UNIT_EOF
 [Unit]
-Description=AIGuard local monitoring agent
+Description=AISentry local monitoring agent
 After=network.target
 
 [Service]
 Type=simple
 ExecStart=$NODE_BIN $AGENT_PATH
 Environment=PORT=$PORT
-Environment=AIGUARD_HOST=$HOSTED_URL
+Environment=AISENTRY_HOST=$HOSTED_URL
 Restart=on-failure
 StandardOutput=append:$LOG_FILE
 StandardError=append:$LOG_FILE
@@ -127,17 +127,17 @@ StandardError=append:$LOG_FILE
 WantedBy=default.target
 UNIT_EOF
   systemctl --user daemon-reload 2>/dev/null || true
-  systemctl --user enable aiguard 2>/dev/null && ok "Registered with systemd (auto-start on login)" || warn "Could not enable systemd unit (non-critical)"
+  systemctl --user enable aisentry 2>/dev/null && ok "Registered with systemd (auto-start on login)" || warn "Could not enable systemd unit (non-critical)"
 fi
 
 # ── Shell aliases ─────────────────────────────────────────────────────────────
 ALIAS_BLOCK="
-# AIGuard aliases (added by installer)
-alias as-start='PORT=$PORT AIGUARD_HOST=$HOSTED_URL nohup node $AGENT_PATH >> $LOG_FILE 2>&1 & echo \$! > $PID_FILE && echo \"AIGuard started (PID \$(cat $PID_FILE))\"'
-alias as-stop='kill \$(cat $PID_FILE 2>/dev/null) 2>/dev/null && rm -f $PID_FILE && echo \"AIGuard stopped\" || echo \"AIGuard not running\"'
+# AISentry aliases (added by installer)
+alias as-start='PORT=$PORT AISENTRY_HOST=$HOSTED_URL nohup node $AGENT_PATH >> $LOG_FILE 2>&1 & echo \$! > $PID_FILE && echo \"AISentry started (PID \$(cat $PID_FILE))\"'
+alias as-stop='kill \$(cat $PID_FILE 2>/dev/null) 2>/dev/null && rm -f $PID_FILE && echo \"AISentry stopped\" || echo \"AISentry not running\"'
 alias as-restart='as-stop; sleep 1; as-start'
 alias as-log='tail -f $LOG_FILE'
-alias as-status='kill -0 \$(cat $PID_FILE 2>/dev/null) 2>/dev/null && echo \"AIGuard running (PID \$(cat $PID_FILE))\" || echo \"AIGuard not running\"'
+alias as-status='kill -0 \$(cat $PID_FILE 2>/dev/null) 2>/dev/null && echo \"AISentry running (PID \$(cat $PID_FILE))\" || echo \"AISentry not running\"'
 alias as-update='curl -fsSL $HOSTED_URL/install.sh | bash'
 alias as-open='open $HOSTED_URL/monitor 2>/dev/null || xdg-open $HOSTED_URL/monitor 2>/dev/null || echo \"Open: $HOSTED_URL/monitor\"'
 "
@@ -159,12 +159,12 @@ if [ -n "$SHELL_RC" ]; then
   read -r REPLY </dev/tty
   REPLY="${REPLY:-Y}"
   if [ "$REPLY" = "Y" ] || [ "$REPLY" = "y" ]; then
-    # Remove any previous AIGuard alias block before appending
-    if grep -q "AIGuard aliases" "$SHELL_RC" 2>/dev/null; then
+    # Remove any previous AISentry alias block before appending
+    if grep -q "AISentry aliases" "$SHELL_RC" 2>/dev/null; then
       # Portable removal of old block (sed on macOS requires -i '' )
       SED_I=(-i)
       [ "$(uname)" = "Darwin" ] && SED_I=(-i '')
-      sed "${SED_I[@]}" '/# AIGuard aliases/,/^alias as-open/d' "$SHELL_RC"
+      sed "${SED_I[@]}" '/# AISentry aliases/,/^alias as-open/d' "$SHELL_RC"
     fi
     printf '%s\n' "$ALIAS_BLOCK" >> "$SHELL_RC"
     ok "Aliases added to $SHELL_RC — run: source $SHELL_RC"

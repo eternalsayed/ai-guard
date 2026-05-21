@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AIGuard — Monitor every AI coding agent on your machine</title>
+  <title>AISentry — Monitor every AI coding agent on your machine</title>
   <meta name="description"
     content="Real-time monitoring for Claude Code, Codex, Gemini CLI, Aider, and more. Surfaces rogue permissions, background daemons, and unexpected network connections — entirely on your machine.">
 
@@ -894,7 +894,7 @@
   <nav>
     <a href="/" class="nav-logo" style="text-decoration:none">
       <span class="nav-logo-dot"></span>
-      AIGuard
+      AISentry
     </a>
     <div class="nav-links">
       <a href="#features" class="nav-link">Features</a>
@@ -914,7 +914,7 @@
 
     <h1>One dashboard for<br><em>every AI coding agent.</em></h1>
     <p class="hero-sub">
-      AIGuard monitors Claude Code, Codex, Gemini CLI, Aider, and more — surfacing rogue permissions, background
+      AISentry monitors Claude Code, Codex, Gemini CLI, Aider, and more — surfacing rogue permissions, background
       daemons, and unexpected network connections before they cause damage.
     </p>
 
@@ -936,10 +936,10 @@
           <span class="t-dot red"></span>
           <span class="t-dot yellow"></span>
           <span class="t-dot green"></span>
-          <span class="terminal-title">AIGuard — localhost:4242</span>
+          <span class="terminal-title">AISentry — localhost:4242</span>
         </div>
         <div class="terminal-body">
-          <div><span class="t-green t-bold">AIGuard</span> <span class="t-muted">v1.0.0</span> <span
+          <div><span class="t-green t-bold">AISentry</span> <span class="t-muted">v1.0.0</span> <span
               class="t-dim">·</span> <span class="t-muted">agent running</span> <span class="t-green">●</span></div>
           <div class="t-dim">──────────────────────────────────────────────────────</div>
           <div><span class="t-red t-bold">[!]</span> <span class="t-bold">3 alerts</span></div>
@@ -1016,7 +1016,7 @@
       <div class="step">
         <div class="step-num">1</div>
         <h3>Install the agent</h3>
-        <p>Run one command. It downloads a 15 KB Node.js agent to <code>~/.aiguard/</code>, starts it in the background,
+        <p>Run one command. It downloads a 15 KB Node.js agent to <code>~/.aisentry/</code>, starts it in the background,
           and registers it with launchd (macOS) or systemd (Linux) so it restarts on login.</p>
       </div>
       <div class="step">
@@ -1037,7 +1037,7 @@
     <div class="arch-diagram"><span class="t-muted">┌── aisentry.netlify.app ─────────┐ ┌── Your machine
         ────────────────────────────┐
         │ │ │ │
-        │ Static HTML / CSS / JS │ SSE │ ~/.aiguard/agent.js │
+        │ Static HTML / CSS / JS │ SSE │ ~/.aisentry/agent.js │
         │ │◄────────┤ └─ listens on 127.0.0.1:4242 │
         │ Browser renders the dashboard │ │ reads: ~/.claude/, ~/.gemini/, │
         │ │ │ ~/.codex/, ps aux, lsof -i │
@@ -1104,7 +1104,7 @@
         <h3>Resource footprint</h3>
         <div class="fp-list">
           <div class="fp-row"><span class="fp-l">Disk</span> <span class="fp-v">~15 KB</span> <span class="fp-n">single
-              file in <code>~/.aiguard/</code></span></div>
+              file in <code>~/.aisentry/</code></span></div>
           <div class="fp-row"><span class="fp-l">RAM</span> <span class="fp-v">35–50 MB</span> <span
               class="fp-n">Node.js process baseline; no growth</span></div>
           <div class="fp-row"><span class="fp-l">CPU idle</span> <span class="fp-v">&lt;0.1%</span> <span
@@ -1114,7 +1114,7 @@
           <div class="fp-row"><span class="fp-l">Port</span> <span class="fp-v">4242</span> <span class="fp-n">127.0.0.1
               only — not reachable from the internet</span></div>
           <div class="fp-row"><span class="fp-l">Log file</span> <span class="fp-v">grows</span> <span
-              class="fp-n"><code>~/.aiguard/agent.log</code> — delete anytime</span></div>
+              class="fp-n"><code>~/.aisentry/agent.log</code> — delete anytime</span></div>
           <div class="fp-row"><span class="fp-l">Outbound</span> <span class="fp-v">1 req/hr</span> <span
               class="fp-n">version check to <code>/version.json</code> only</span></div>
         </div>
@@ -1174,7 +1174,7 @@
           </div>
           <div class="ctrl-item">
             <h4>Full uninstall</h4>
-            <code>as-stop &amp;&amp; rm -rf ~/.aiguard</code>
+            <code>as-stop &amp;&amp; rm -rf ~/.aisentry</code>
           </div>
         </div>
         <p class="ctrl-note">The installer adds <code>as-*</code> aliases to your shell rc. The agent does
@@ -1235,7 +1235,7 @@
 
   <!-- ── Footer ────────────────────────────────────────────────────────────── -->
   <footer>
-    <div class="footer-left"><span>AIGuard</span> — MIT License</div>
+    <div class="footer-left"><span>AISentry</span> — MIT License</div>
     <div class="footer-links">
       <a href="#how-it-works">How it works</a>
       <a href="#features">Features</a>
