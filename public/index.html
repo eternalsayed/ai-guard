@@ -1,536 +1,1267 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AIGuard — Monitor every AI coding agent on your machine</title>
-<meta name="description" content="Real-time monitoring for Claude Code, Codex, Gemini CLI, Aider, and more. Surfaces rogue permissions, background daemons, and unexpected network connections — entirely on your machine.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIGuard — Monitor every AI coding agent on your machine</title>
+  <meta name="description"
+    content="Real-time monitoring for Claude Code, Codex, Gemini CLI, Aider, and more. Surfaces rogue permissions, background daemons, and unexpected network connections — entirely on your machine.">
 
-<!-- Analytics: swap in your preferred privacy-respecting provider -->
-<!-- Plausible: <script defer data-domain="yourdomain.com" src="https://plausible.io/js/script.js"></script> -->
-<!-- Fathom:    <script src="https://cdn.usefathom.com/script.js" data-site="XXXXXXXX" defer></script>   -->
-<!-- Umami:     <script async src="https://analytics.umami.is/script.js" data-website-id="..."></script>  -->
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <!-- Analytics: swap in your preferred privacy-respecting provider -->
+  <!-- Plausible: <script defer data-domain="yourdomain.com" src="https://plausible.io/js/script.js"></script> -->
+  <!-- Fathom:    <script src="https://cdn.usefathom.com/script.js" data-site="XXXXXXXX" defer></script>   -->
+  <!-- Umami:     <script async src="https://analytics.umami.is/script.js" data-website-id="..."></script>  -->
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-:root {
-  --bg:      #0d1117;
-  --surface: #161b22;
-  --surface2:#1c2128;
-  --border:  #30363d;
-  --text:    #e6edf3;
-  --muted:   #8b949e;
-  --green:   #3fb950;
-  --yellow:  #d29922;
-  --orange:  #f0883e;
-  --red:     #f85149;
-  --blue:    #58a6ff;
-  --purple:  #bc8cff;
-}
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --orange: #f0883e;
+      --red: #f85149;
+      --blue: #58a6ff;
+      --purple: #bc8cff;
+    }
 
-html { scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; }
-a { color: var(--blue); text-decoration: none; }
-a:hover { text-decoration: underline; }
-code { font-family: 'SF Mono', 'Fira Code', Menlo, monospace; font-size: .875em; background: rgba(255,255,255,.07); padding: 2px 6px; border-radius: 4px; }
+    html {
+      scroll-behavior: smooth;
+    }
 
-/* ── Nav ────────────────────────────────────────────────────────── */
-nav {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 32px; height: 60px;
-  border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; background: rgba(13,17,23,.92);
-  backdrop-filter: blur(12px); z-index: 100;
-}
-.nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; color: var(--text); }
-.nav-logo-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
-.nav-links { display: flex; align-items: center; gap: 8px; }
-.nav-link { color: var(--muted); font-size: 14px; padding: 6px 12px; border-radius: 6px; transition: color .15s, background .15s; }
-.nav-link:hover { color: var(--text); background: rgba(255,255,255,.05); text-decoration: none; }
-.nav-cta { background: var(--blue); color: #0d1117 !important; font-weight: 600; font-size: 14px; padding: 7px 16px; border-radius: 6px; transition: opacity .15s; }
-.nav-cta:hover { opacity: .88; text-decoration: none; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+    }
 
-/* ── Sections ────────────────────────────────────────────────────── */
-section { padding: 96px 32px; max-width: 1100px; margin: 0 auto; }
-section.full { max-width: none; padding-left: 0; padding-right: 0; }
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
 
-/* ── Hero ────────────────────────────────────────────────────────── */
-.hero { text-align: center; padding-top: 80px; padding-bottom: 64px; }
-.hero-pill {
-  display: inline-flex; align-items: center; gap: 8px;
-  border: 1px solid var(--border); border-radius: 20px;
-  padding: 4px 14px; font-size: 12px; color: var(--muted);
-  margin-bottom: 32px;
-}
-.hero-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2.5s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    a:hover {
+      text-decoration: underline;
+    }
 
-.hero h1 { font-size: clamp(32px, 5vw, 54px); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; margin-bottom: 20px; }
-.hero h1 em { font-style: normal; color: var(--blue); }
-.hero-sub { font-size: 18px; color: var(--muted); max-width: 580px; margin: 0 auto 40px; line-height: 1.7; }
-.hero-actions { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 64px; }
-.btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--blue); color: #0d1117; font-weight: 700; font-size: 15px; padding: 12px 24px; border-radius: 8px; transition: opacity .15s; }
-.btn-primary:hover { opacity: .88; text-decoration: none; }
-.btn-secondary { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); color: var(--muted); font-size: 15px; padding: 12px 24px; border-radius: 8px; transition: border-color .15s, color .15s; }
-.btn-secondary:hover { border-color: var(--text); color: var(--text); text-decoration: none; }
+    code {
+      font-family: 'SF Mono', 'Fira Code', Menlo, monospace;
+      font-size: .875em;
+      background: rgba(255, 255, 255, .07);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
 
-/* ── Terminal preview ────────────────────────────────────────────── */
-.terminal-wrap { max-width: 760px; margin: 0 auto; }
-.terminal {
-  background: #010409; border: 1px solid var(--border); border-radius: 12px;
-  overflow: hidden; text-align: left; box-shadow: 0 24px 64px rgba(0,0,0,.6);
-}
-.terminal-bar {
-  display: flex; align-items: center; gap: 7px;
-  padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border);
-}
-.t-dot { width: 12px; height: 12px; border-radius: 50%; }
-.t-dot.red { background: #ff5f57; }
-.t-dot.yellow { background: #ffbd2e; }
-.t-dot.green { background: #28ca41; }
-.terminal-title { flex: 1; text-align: center; font-size: 12px; color: var(--muted); font-family: 'SF Mono', Menlo, monospace; }
-.terminal-body { padding: 20px 24px; font-family: 'SF Mono', 'Fira Code', Menlo, monospace; font-size: 13px; line-height: 1.75; }
-.t-dim    { color: #484f58; }
-.t-muted  { color: var(--muted); }
-.t-green  { color: var(--green); }
-.t-red    { color: var(--red); }
-.t-orange { color: var(--orange); }
-.t-yellow { color: var(--yellow); }
-.t-blue   { color: var(--blue); }
-.t-bold   { font-weight: 700; }
-.t-blink  { animation: blink 1.1s step-end infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    /* ── Nav ────────────────────────────────────────────────────────── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 60px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13, 17, 23, .92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
 
-/* ── Problem ─────────────────────────────────────────────────────── */
-.problem { border-top: 1px solid var(--border); }
-.problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-.problem-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--red); margin-bottom: 16px; }
-.problem h2 { font-size: clamp(24px, 3vw, 36px); font-weight: 700; letter-spacing: -.01em; line-height: 1.3; margin-bottom: 20px; }
-.problem p { color: var(--muted); font-size: 16px; line-height: 1.75; margin-bottom: 16px; }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text);
+    }
 
-.threat-list { display: flex; flex-direction: column; gap: 12px; }
-.threat { display: flex; align-items: flex-start; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
-.threat-icon { font-size: 18px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
-.threat-content { font-size: 13px; }
-.threat-content strong { display: block; color: var(--text); margin-bottom: 2px; }
-.threat-content span { color: var(--muted); }
+    .nav-logo-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
 
-/* ── How it works ────────────────────────────────────────────────── */
-.how { border-top: 1px solid var(--border); }
-.section-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--blue); margin-bottom: 16px; }
-.section-title { font-size: clamp(24px, 3vw, 36px); font-weight: 700; letter-spacing: -.01em; margin-bottom: 12px; }
-.section-sub { color: var(--muted); font-size: 16px; max-width: 500px; line-height: 1.7; margin-bottom: 56px; }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.step { position: relative; }
-.step-num { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: var(--blue); margin-bottom: 16px; }
-.step h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-.step p { font-size: 14px; color: var(--muted); line-height: 1.7; }
-.step code { font-size: 12px; }
+    .nav-link {
+      color: var(--muted);
+      font-size: 14px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: color .15s, background .15s;
+    }
 
-.arch-diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; font-family: 'SF Mono', Menlo, monospace; font-size: 13px; color: var(--muted); line-height: 2; margin-top: 48px; white-space: pre; overflow-x: auto; }
+    .nav-link:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, .05);
+      text-decoration: none;
+    }
 
-/* ── Features ────────────────────────────────────────────────────── */
-.features { border-top: 1px solid var(--border); }
-.feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; transition: border-color .2s; }
-.feature-card:hover { border-color: rgba(88,166,255,.4); }
-.feature-icon { font-size: 22px; margin-bottom: 14px; }
-.feature-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
-.feature-card p { font-size: 13px; color: var(--muted); line-height: 1.65; }
+    .nav-cta {
+      background: var(--blue);
+      color: #0d1117 !important;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 7px 16px;
+      border-radius: 6px;
+      transition: opacity .15s;
+    }
 
-/* ── Privacy ─────────────────────────────────────────────────────── */
-.privacy { border-top: 1px solid var(--border); }
-.privacy-inner { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-.privacy h2 { font-size: clamp(22px, 2.5vw, 32px); font-weight: 700; letter-spacing: -.01em; margin-bottom: 16px; }
-.privacy p { color: var(--muted); font-size: 15px; line-height: 1.75; margin-bottom: 24px; }
-.privacy-points { display: flex; flex-direction: column; gap: 14px; }
-.privacy-point { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; }
-.privacy-point-icon { color: var(--green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-.privacy-point-text { color: var(--muted); }
-.privacy-point-text strong { color: var(--text); }
+    .nav-cta:hover {
+      opacity: .88;
+      text-decoration: none;
+    }
 
-/* ── CTA band ────────────────────────────────────────────────────── */
-.cta-band { border-top: 1px solid var(--border); text-align: center; }
-.cta-band h2 { font-size: clamp(24px, 3vw, 40px); font-weight: 800; letter-spacing: -.02em; margin-bottom: 16px; }
-.cta-band p { color: var(--muted); font-size: 16px; margin-bottom: 36px; }
-.cta-install { display: inline-flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; font-family: 'SF Mono', Menlo, monospace; font-size: 13px; color: var(--green); cursor: pointer; transition: border-color .15s; }
-.cta-install:hover { border-color: var(--green); }
-.cta-copy-btn { border: 1px solid var(--border); border-radius: 5px; background: none; color: var(--muted); font-size: 11px; padding: 3px 8px; cursor: pointer; transition: all .15s; }
-.cta-copy-btn:hover { border-color: var(--blue); color: var(--blue); }
-.cta-copy-btn.copied { border-color: var(--green); color: var(--green); }
-.cta-or { color: var(--muted); font-size: 13px; margin: 20px 0; }
+    /* ── Sections ────────────────────────────────────────────────────── */
+    section {
+      padding: 96px 32px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
 
-/* ── Agent section ───────────────────────────────────────────────── */
-.agent-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; }
-.agent-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+    section.full {
+      max-width: none;
+      padding-left: 0;
+      padding-right: 0;
+    }
 
-.fp-list { display: flex; flex-direction: column; gap: 8px; }
-.fp-row { display: grid; grid-template-columns: 80px 80px 1fr; align-items: baseline; gap: 8px; border-bottom: 1px solid #21262d; padding-bottom: 8px; }
-.fp-row:last-child { border-bottom: none; padding-bottom: 0; }
-.fp-l { font-size: 11px; color: var(--muted); }
-.fp-v { font-size: 12px; font-weight: 700; font-family: 'SF Mono',Menlo,monospace; color: var(--text); }
-.fp-n { font-size: 11px; color: var(--muted); }
+    /* ── Hero ────────────────────────────────────────────────────────── */
+    .hero {
+      text-align: center;
+      padding-top: 80px;
+      padding-bottom: 64px;
+    }
 
-.reads-list { display: flex; flex-direction: column; gap: 9px; }
-.ri { display: flex; gap: 9px; font-size: 13px; }
-.ri-icon { flex-shrink: 0; font-size: 13px; font-weight: 700; margin-top: 1px; }
-.ri.yes .ri-icon { color: var(--green); }
-.ri.no  .ri-icon { color: var(--red); }
-.ri strong { display: block; font-size: 13px; margin-bottom: 2px; }
-.ri span   { font-size: 11px; color: var(--muted); }
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
 
-.ctrl-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-.ctrl-item h4 { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
-.ctrl-item code { font-size: 11px; display: block; word-break: break-all; line-height: 1.6; }
-.ctrl-note { font-size: 12px; color: var(--muted); line-height: 1.65; border-top: 1px solid var(--border); padding-top: 12px; }
+    .hero-pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2.5s infinite;
+    }
 
-/* ── Footer ──────────────────────────────────────────────────────── */
-footer { border-top: 1px solid var(--border); padding: 32px; display: flex; align-items: center; justify-content: space-between; max-width: 1100px; margin: 0 auto; }
-.footer-left { font-size: 13px; color: var(--muted); }
-.footer-left span { color: var(--text); font-weight: 600; }
-.footer-links { display: flex; gap: 20px; }
-.footer-links a { font-size: 13px; color: var(--muted); }
-.footer-links a:hover { color: var(--text); text-decoration: none; }
+    @keyframes pulse {
 
-/* ── Responsive ──────────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .agent-grid { grid-template-columns: 1fr; }
-}
-@media (max-width: 800px) {
-  nav { padding: 0 20px; }
-  section { padding: 64px 20px; }
-  .problem-grid { grid-template-columns: 1fr; }
-  .steps { grid-template-columns: 1fr; }
-  .feature-grid { grid-template-columns: 1fr 1fr; }
-  .privacy-inner { grid-template-columns: 1fr; gap: 32px; }
-  footer { flex-direction: column; gap: 16px; text-align: center; }
-}
-@media (max-width: 560px) {
-  .feature-grid { grid-template-columns: 1fr; }
-  .nav-link:not(.nav-cta) { display: none; }
-}
-</style>
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .3
+      }
+    }
+
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 54px);
+      font-weight: 800;
+      letter-spacing: -.02em;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--blue);
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 580px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 64px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--blue);
+      color: #0d1117;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      transition: opacity .15s;
+    }
+
+    .btn-primary:hover {
+      opacity: .88;
+      text-decoration: none;
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 15px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      transition: border-color .15s, color .15s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text);
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    /* ── Terminal preview ────────────────────────────────────────────── */
+    .terminal-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .terminal {
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      text-align: left;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, .6);
+    }
+
+    .terminal-bar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .t-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .t-dot.red {
+      background: #ff5f57;
+    }
+
+    .t-dot.yellow {
+      background: #ffbd2e;
+    }
+
+    .t-dot.green {
+      background: #28ca41;
+    }
+
+    .terminal-title {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'SF Mono', Menlo, monospace;
+    }
+
+    .terminal-body {
+      padding: 20px 24px;
+      font-family: 'SF Mono', 'Fira Code', Menlo, monospace;
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+    .t-dim {
+      color: #484f58;
+    }
+
+    .t-muted {
+      color: var(--muted);
+    }
+
+    .t-green {
+      color: var(--green);
+    }
+
+    .t-red {
+      color: var(--red);
+    }
+
+    .t-orange {
+      color: var(--orange);
+    }
+
+    .t-yellow {
+      color: var(--yellow);
+    }
+
+    .t-blue {
+      color: var(--blue);
+    }
+
+    .t-bold {
+      font-weight: 700;
+    }
+
+    .t-blink {
+      animation: blink 1.1s step-end infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0
+      }
+    }
+
+    /* ── Problem ─────────────────────────────────────────────────────── */
+    .problem {
+      border-top: 1px solid var(--border);
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .problem-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--red);
+      margin-bottom: 16px;
+    }
+
+    .problem h2 {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 700;
+      letter-spacing: -.01em;
+      line-height: 1.3;
+      margin-bottom: 20px;
+    }
+
+    .problem p {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+      margin-bottom: 16px;
+    }
+
+    .threat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .threat {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .threat-icon {
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .threat-content {
+      font-size: 13px;
+    }
+
+    .threat-content strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .threat-content span {
+      color: var(--muted);
+    }
+
+    /* ── How it works ────────────────────────────────────────────────── */
+    .how {
+      border-top: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--blue);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 700;
+      letter-spacing: -.01em;
+      margin-bottom: 12px;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 500px;
+      line-height: 1.7;
+      margin-bottom: 56px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .step {
+      position: relative;
+    }
+
+    .step-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 16px;
+    }
+
+    .step h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .step p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .step code {
+      font-size: 12px;
+    }
+
+    .arch-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      font-family: 'SF Mono', Menlo, monospace;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 2;
+      margin-top: 48px;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* ── Features ────────────────────────────────────────────────────── */
+    .features {
+      border-top: 1px solid var(--border);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      transition: border-color .2s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(88, 166, 255, .4);
+    }
+
+    .feature-icon {
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+
+    .feature-card h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ── Privacy ─────────────────────────────────────────────────────── */
+    .privacy {
+      border-top: 1px solid var(--border);
+    }
+
+    .privacy-inner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .privacy h2 {
+      font-size: clamp(22px, 2.5vw, 32px);
+      font-weight: 700;
+      letter-spacing: -.01em;
+      margin-bottom: 16px;
+    }
+
+    .privacy p {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.75;
+      margin-bottom: 24px;
+    }
+
+    .privacy-points {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .privacy-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .privacy-point-icon {
+      color: var(--green);
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .privacy-point-text {
+      color: var(--muted);
+    }
+
+    .privacy-point-text strong {
+      color: var(--text);
+    }
+
+    /* ── CTA band ────────────────────────────────────────────────────── */
+    .cta-band {
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .cta-band h2 {
+      font-size: clamp(24px, 3vw, 40px);
+      font-weight: 800;
+      letter-spacing: -.02em;
+      margin-bottom: 16px;
+    }
+
+    .cta-band p {
+      color: var(--muted);
+      font-size: 16px;
+      margin-bottom: 36px;
+    }
+
+    .cta-install {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-family: 'SF Mono', Menlo, monospace;
+      font-size: 13px;
+      color: var(--green);
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+
+    .cta-install:hover {
+      border-color: var(--green);
+    }
+
+    .cta-copy-btn {
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: none;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .cta-copy-btn:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .cta-copy-btn.copied {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .cta-or {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 20px 0;
+    }
+
+    /* ── Agent section ───────────────────────────────────────────────── */
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .agent-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+    }
+
+    .agent-card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .fp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .fp-row {
+      display: grid;
+      grid-template-columns: 80px 80px 1fr;
+      align-items: baseline;
+      gap: 8px;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 8px;
+    }
+
+    .fp-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .fp-l {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .fp-v {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'SF Mono', Menlo, monospace;
+      color: var(--text);
+    }
+
+    .fp-n {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .reads-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .ri {
+      display: flex;
+      gap: 9px;
+      font-size: 13px;
+    }
+
+    .ri-icon {
+      flex-shrink: 0;
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+
+    .ri.yes .ri-icon {
+      color: var(--green);
+    }
+
+    .ri.no .ri-icon {
+      color: var(--red);
+    }
+
+    .ri strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .ri span {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .ctrl-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .ctrl-item h4 {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 5px;
+    }
+
+    .ctrl-item code {
+      font-size: 11px;
+      display: block;
+      word-break: break-all;
+      line-height: 1.6;
+    }
+
+    .ctrl-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.65;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .footer-left {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .footer-left span {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links a {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .footer-links a:hover {
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .agent-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 800px) {
+      nav {
+        padding: 0 20px;
+      }
+
+      section {
+        padding: 64px 20px;
+      }
+
+      .problem-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .privacy-inner {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      footer {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-link:not(.nav-cta) {
+        display: none;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- ── Nav ──────────────────────────────────────────────────────────────── -->
-<nav>
-  <a href="/" class="nav-logo" style="text-decoration:none">
-    <span class="nav-logo-dot"></span>
-    AIGuard
-  </a>
-  <div class="nav-links">
-    <a href="#features" class="nav-link">Features</a>
-    <a href="#how-it-works" class="nav-link">How it works</a>
-    <a href="#about-agent" class="nav-link">The agent</a>
-    <a href="https://github.com/eternalsayed/ai-monitor" class="nav-link" target="_blank">GitHub</a>
-    <a href="/monitor" class="nav-link nav-cta">Open Monitor →</a>
-  </div>
-</nav>
-
-<!-- ── Hero ─────────────────────────────────────────────────────────────── -->
-<section class="hero">
-  <div class="hero-pill">
-    <span class="hero-pill-dot"></span>
-    Claude · Codex · Gemini · Aider · Real-time · Local
-  </div>
-
-  <h1>One dashboard for<br><em>every AI coding agent.</em></h1>
-  <p class="hero-sub">
-    AIGuard monitors Claude Code, Codex, Gemini CLI, Aider, and more — surfacing rogue permissions, background daemons, and unexpected network connections before they cause damage.
-  </p>
-
-  <div class="hero-actions">
-    <a href="/monitor" class="btn-primary">Open Monitor →</a>
-    <a href="https://github.com/eternalsayed/ai-monitor" class="btn-secondary" target="_blank">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
-      View source
+  <!-- ── Nav ──────────────────────────────────────────────────────────────── -->
+  <nav>
+    <a href="/" class="nav-logo" style="text-decoration:none">
+      <span class="nav-logo-dot"></span>
+      AIGuard
     </a>
-  </div>
-
-  <!-- Terminal preview -->
-  <div class="terminal-wrap">
-    <div class="terminal">
-      <div class="terminal-bar">
-        <span class="t-dot red"></span>
-        <span class="t-dot yellow"></span>
-        <span class="t-dot green"></span>
-        <span class="terminal-title">AIGuard — localhost:4242</span>
-      </div>
-      <div class="terminal-body">
-        <div><span class="t-green t-bold">AIGuard</span> <span class="t-muted">v1.0.0</span> <span class="t-dim">·</span> <span class="t-muted">agent running</span> <span class="t-green">●</span></div>
-        <div class="t-dim">──────────────────────────────────────────────────────</div>
-        <div><span class="t-red t-bold">[!]</span> <span class="t-bold">3 alerts</span></div>
-        <div>&nbsp;</div>
-        <div><span class="t-red">CRITICAL</span>  <span class="t-muted">Bash(node .claude/*)</span>          <span class="t-dim">vue-app/</span></div>
-        <div><span class="t-orange">HIGH    </span>  <span class="t-muted">Background daemon (PID 34010)</span>  <span class="t-dim">claude-flow, 9d uptime</span></div>
-        <div><span class="t-orange">HIGH    </span>  <span class="t-muted">Unknown outbound 45.79.88.12:443</span> <span class="t-dim">via claude-flow</span></div>
-        <div>&nbsp;</div>
-        <div class="t-dim">──────────────────────────────────────────────────────</div>
-        <div><span class="t-muted">Sessions today  </span><span class="t-bold">247</span>  <span class="t-dim">·</span>  <span class="t-muted">This hour  </span><span class="t-yellow t-bold">31</span>  <span class="t-dim">·</span>  <span class="t-muted">Projects  </span><span class="t-bold">4</span></div>
-        <div>&nbsp;</div>
-        <div class="t-dim">Agent streaming events to browser... <span class="t-blink">▌</span></div>
-      </div>
+    <div class="nav-links">
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#how-it-works" class="nav-link">How it works</a>
+      <a href="#about-agent" class="nav-link">The agent</a>
+      <a href="https://github.com/eternalsayed/ai-guard" class="nav-link" target="_blank">GitHub</a>
+      <a href="/monitor" class="nav-link nav-cta">Open Monitor →</a>
     </div>
-  </div>
-</section>
+  </nav>
 
-<!-- ── Problem ───────────────────────────────────────────────────────────── -->
-<section class="problem" id="problem">
-  <div class="problem-grid">
-    <div>
-      <div class="problem-label">Why this exists</div>
-      <h2>AI coding tools can run away with your quota.</h2>
-      <p>Claude Code, Codex, Gemini CLI, and Cursor are powerful — but their plugin ecosystems can operate well beyond what you'd expect: scheduling autonomous sessions, granting themselves broad permissions, using the most expensive models without asking, and opening connections to endpoints you've never heard of.</p>
-      <p>By the time you notice, you're looking at a 39% quota remaining and a reset that's 18 minutes away.</p>
+  <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-pill">
+      <span class="hero-pill-dot"></span>
+      Claude · Codex · Gemini · Aider · Real-time · Local
     </div>
-    <div class="threat-list">
-      <div class="threat">
-        <span class="threat-icon">🔓</span>
-        <div class="threat-content">
-          <strong>Blanket permissions</strong>
-          <span><code>Bash(node .claude/*)</code> lets any script in that directory run silently — no prompts</span>
+
+    <h1>One dashboard for<br><em>every AI coding agent.</em></h1>
+    <p class="hero-sub">
+      AIGuard monitors Claude Code, Codex, Gemini CLI, Aider, and more — surfacing rogue permissions, background
+      daemons, and unexpected network connections before they cause damage.
+    </p>
+
+    <div class="hero-actions">
+      <a href="/monitor" class="btn-primary">Open Monitor →</a>
+      <a href="https://github.com/eternalsayed/ai-guard" class="btn-secondary" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z" />
+        </svg>
+        View source
+      </a>
+    </div>
+
+    <!-- Terminal preview -->
+    <div class="terminal-wrap">
+      <div class="terminal">
+        <div class="terminal-bar">
+          <span class="t-dot red"></span>
+          <span class="t-dot yellow"></span>
+          <span class="t-dot green"></span>
+          <span class="terminal-title">AIGuard — localhost:4242</span>
         </div>
-      </div>
-      <div class="threat">
-        <span class="threat-icon">⏰</span>
-        <div class="threat-content">
-          <strong>Scheduled workers</strong>
-          <span>Daemons that run audit and optimization jobs every few hours — burning quota on autopilot</span>
-        </div>
-      </div>
-      <div class="threat">
-        <span class="threat-icon">💸</span>
-        <div class="threat-content">
-          <strong>Model overrides</strong>
-          <span>Some plugins hardcode <code>claude-opus-4-7</code> regardless of what model you selected</span>
-        </div>
-      </div>
-      <div class="threat">
-        <span class="threat-icon">📡</span>
-        <div class="threat-content">
-          <strong>Unknown outbound connections</strong>
-          <span>Background processes opening connections to IPs that aren't Anthropic's API</span>
+        <div class="terminal-body">
+          <div><span class="t-green t-bold">AIGuard</span> <span class="t-muted">v1.0.0</span> <span
+              class="t-dim">·</span> <span class="t-muted">agent running</span> <span class="t-green">●</span></div>
+          <div class="t-dim">──────────────────────────────────────────────────────</div>
+          <div><span class="t-red t-bold">[!]</span> <span class="t-bold">3 alerts</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-red">CRITICAL</span> <span class="t-muted">Bash(node .claude/*)</span> <span
+              class="t-dim">vue-app/</span></div>
+          <div><span class="t-orange">HIGH </span> <span class="t-muted">Background daemon (PID 34010)</span> <span
+              class="t-dim">claude-flow, 9d uptime</span></div>
+          <div><span class="t-orange">HIGH </span> <span class="t-muted">Unknown outbound 45.79.88.12:443</span> <span
+              class="t-dim">via claude-flow</span></div>
+          <div>&nbsp;</div>
+          <div class="t-dim">──────────────────────────────────────────────────────</div>
+          <div><span class="t-muted">Sessions today </span><span class="t-bold">247</span> <span class="t-dim">·</span>
+            <span class="t-muted">This hour </span><span class="t-yellow t-bold">31</span> <span class="t-dim">·</span>
+            <span class="t-muted">Projects </span><span class="t-bold">4</span></div>
+          <div>&nbsp;</div>
+          <div class="t-dim">Agent streaming events to browser... <span class="t-blink">▌</span></div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── How it works ──────────────────────────────────────────────────────── -->
-<section class="how" id="how-it-works">
-  <div class="section-label">How it works</div>
-  <h2 class="section-title">Simple by design.</h2>
-  <p class="section-sub">No accounts, no relay servers, no subscriptions. One command gets you a live dashboard.</p>
-
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <h3>Install the agent</h3>
-      <p>Run one command. It downloads a 15 KB Node.js agent to <code>~/.aiguard/</code>, starts it in the background, and registers it with launchd (macOS) or systemd (Linux) so it restarts on login.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <h3>Agent reads your environment</h3>
-      <p>Every 5 seconds the agent reads session files for Claude, Codex, and Gemini; scans settings from all detected tools; checks running processes; and monitors network connections — only when your browser is open, so it's zero-overhead otherwise.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <h3>Browser connects directly</h3>
-      <p>The Monitor page opens a Server-Sent Events stream to <code>localhost:4242</code>. Data flows from your machine straight to your browser tab. Nothing passes through any server.</p>
-    </div>
-  </div>
-
-  <div class="arch-diagram"><span class="t-muted">┌── aiguard.netlify.app ──────────┐         ┌── Your machine ────────────────────────────┐
-│                                    │         │                                            │
-│  Static HTML / CSS / JS            │   SSE   │  ~/.aiguard/agent.js                   │
-│                                    │◄────────┤  └─ listens on 127.0.0.1:4242            │
-│  Browser renders the dashboard     │         │     reads: ~/.claude/, ~/.gemini/,         │
-│                                    │         │            ~/.codex/, ps aux, lsof -i     │
-└────────────────────────────────────┘         │     streams events only when you're here  │
-                                               └────────────────────────────────────────────┘
-                <span class="t-green">Data never leaves your machine</span></span></div>
-</section>
-
-<!-- ── Features ──────────────────────────────────────────────────────────── -->
-<section class="features" id="features">
-  <div class="section-label">What it monitors</div>
-  <h2 class="section-title">Every AI coding tool on your machine.</h2>
-  <p class="section-sub">Six panels, one view. Refreshed in real time every 5 seconds.</p>
-
-  <div class="feature-grid">
-    <div class="feature-card">
-      <div class="feature-icon">📊</div>
-      <h3>Session tracking</h3>
-      <p>Hourly session counts across Claude Code, Codex, and Gemini with a 24-hour timeline. Spot the exact moment a daemon woke up and started burning quota.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🔑</div>
-      <h3>Permission audit</h3>
-      <p>Every allow/deny rule in Claude settings, Codex config, and Cursor rules — rated by risk. Blanket wildcards, full-auto modes, and model overrides flagged immediately.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🌐</div>
-      <h3>Network connections</h3>
-      <p>All outbound connections from AI agent processes. Anthropic, OpenAI, Google, and GitHub endpoints are whitelisted — anything else is flagged for your review.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">⚙️</div>
-      <h3>Process monitor</h3>
-      <p>Live list of processes from all detected AI tools — PID, CPU, memory, and a risk label. Daemons, hook scripts, and unknown workers are flagged separately.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🚨</div>
-      <h3>Automatic alerts</h3>
-      <p>Critical and high-risk findings bubble to the top of the dashboard without you having to dig. Session surges trigger alerts too.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🔄</div>
-      <h3>Update notifications</h3>
-      <p>The agent checks for new versions and surfaces a one-line update command in the browser — no need to remember to update manually.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ── About the agent ───────────────────────────────────────────────────── -->
-<section id="about-agent" style="border-top:1px solid var(--border)">
-  <div class="section-label">About the agent</div>
-  <h2 class="section-title">Small, transparent, fully in your control.</h2>
-  <p class="section-sub">One Node.js file, no npm dependencies. Here's exactly what it costs and what it touches.</p>
-
-  <div class="agent-grid">
-
-    <div class="agent-card">
-      <h3>Resource footprint</h3>
-      <div class="fp-list">
-        <div class="fp-row"><span class="fp-l">Disk</span>     <span class="fp-v">~15 KB</span>        <span class="fp-n">single file in <code>~/.aiguard/</code></span></div>
-        <div class="fp-row"><span class="fp-l">RAM</span>      <span class="fp-v">35–50 MB</span>      <span class="fp-n">Node.js process baseline; no growth</span></div>
-        <div class="fp-row"><span class="fp-l">CPU idle</span> <span class="fp-v">&lt;0.1%</span>      <span class="fp-n">nothing happens when no browser is open</span></div>
-        <div class="fp-row"><span class="fp-l">CPU active</span><span class="fp-v">~1–2%</span>        <span class="fp-n">brief spike every 5 s when you're on the dashboard</span></div>
-        <div class="fp-row"><span class="fp-l">Port</span>     <span class="fp-v">4242</span>          <span class="fp-n">127.0.0.1 only — not reachable from the internet</span></div>
-        <div class="fp-row"><span class="fp-l">Log file</span> <span class="fp-v">grows</span>        <span class="fp-n"><code>~/.aiguard/agent.log</code> — delete anytime</span></div>
-        <div class="fp-row"><span class="fp-l">Outbound</span> <span class="fp-v">1 req/hr</span>      <span class="fp-n">version check to <code>/version.json</code> only</span></div>
+  <!-- ── Problem ───────────────────────────────────────────────────────────── -->
+  <section class="problem" id="problem">
+    <div class="problem-grid">
+      <div>
+        <div class="problem-label">Why this exists</div>
+        <h2>AI coding tools can run away with your quota.</h2>
+        <p>Claude Code, Codex, Gemini CLI, and Cursor are powerful — but their plugin ecosystems can operate well beyond
+          what you'd expect: scheduling autonomous sessions, granting themselves broad permissions, using the most
+          expensive models without asking, and opening connections to endpoints you've never heard of.</p>
+        <p>By the time you notice, you're looking at a 39% quota remaining and a reset that's 18 minutes away.</p>
       </div>
-    </div>
-
-    <div class="agent-card">
-      <h3>What it reads (and doesn't)</h3>
-      <div class="reads-list">
-        <div class="ri yes"><span class="ri-icon">✓</span><div><strong>Session metadata</strong><span>File size + timestamp from <code>~/.claude/</code>, <code>~/.gemini/</code>, <code>~/.codex/</code> — not the content</span></div></div>
-        <div class="ri yes"><span class="ri-icon">✓</span><div><strong>Settings files</strong><span><code>settings.json</code>, <code>config.json</code>, <code>.cursor/settings.json</code> per project</span></div></div>
-        <div class="ri yes"><span class="ri-icon">✓</span><div><strong>Process list</strong><span><code>ps aux</code> — to find AI agent processes by name</span></div></div>
-        <div class="ri yes"><span class="ri-icon">✓</span><div><strong>Network connections</strong><span><code>lsof -i</code> scoped to AI agent PIDs only</span></div></div>
-        <div class="ri no" ><span class="ri-icon">✗</span><div><strong>Session content</strong><span>Conversation text is never read — not even sampled</span></div></div>
-        <div class="ri no" ><span class="ri-icon">✗</span><div><strong>API keys / secrets</strong><span>No access to <code>.env</code>, keychain, or credential files</span></div></div>
-      </div>
-    </div>
-
-    <div class="agent-card">
-      <h3>You stay in control</h3>
-      <div class="ctrl-list">
-        <div class="ctrl-item">
-          <h4>Status</h4>
-          <code>as-status</code>
+      <div class="threat-list">
+        <div class="threat">
+          <span class="threat-icon">🔓</span>
+          <div class="threat-content">
+            <strong>Blanket permissions</strong>
+            <span><code>Bash(node .claude/*)</code> lets any script in that directory run silently — no prompts</span>
+          </div>
         </div>
-        <div class="ctrl-item">
-          <h4>Tail logs</h4>
-          <code>as-log</code>
+        <div class="threat">
+          <span class="threat-icon">⏰</span>
+          <div class="threat-content">
+            <strong>Scheduled workers</strong>
+            <span>Daemons that run audit and optimization jobs every few hours — burning quota on autopilot</span>
+          </div>
         </div>
-        <div class="ctrl-item">
-          <h4>Stop</h4>
-          <code>as-stop</code>
+        <div class="threat">
+          <span class="threat-icon">💸</span>
+          <div class="threat-content">
+            <strong>Model overrides</strong>
+            <span>Some plugins hardcode <code>claude-opus-4-7</code> regardless of what model you selected</span>
+          </div>
         </div>
-        <div class="ctrl-item">
-          <h4>Restart</h4>
-          <code>as-restart</code>
-        </div>
-        <div class="ctrl-item">
-          <h4>Update agent</h4>
-          <code>as-update</code>
-        </div>
-        <div class="ctrl-item">
-          <h4>Full uninstall</h4>
-          <code>as-stop &amp;&amp; rm -rf ~/.aiguard</code>
+        <div class="threat">
+          <span class="threat-icon">📡</span>
+          <div class="threat-content">
+            <strong>Unknown outbound connections</strong>
+            <span>Background processes opening connections to IPs that aren't Anthropic's API</span>
+          </div>
         </div>
       </div>
-      <p class="ctrl-note">The installer adds <code>as-*</code> aliases to your shell rc. The agent does <strong>not</strong> auto-start after a reboot — run <code>as-start</code> or re-run the installer.</p>
+    </div>
+  </section>
+
+  <!-- ── How it works ──────────────────────────────────────────────────────── -->
+  <section class="how" id="how-it-works">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">Simple by design.</h2>
+    <p class="section-sub">No accounts, no relay servers, no subscriptions. One command gets you a live dashboard.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Install the agent</h3>
+        <p>Run one command. It downloads a 15 KB Node.js agent to <code>~/.aiguard/</code>, starts it in the background,
+          and registers it with launchd (macOS) or systemd (Linux) so it restarts on login.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Agent reads your environment</h3>
+        <p>Every 5 seconds the agent reads session files for Claude, Codex, and Gemini; scans settings from all detected
+          tools; checks running processes; and monitors network connections — only when your browser is open, so it's
+          zero-overhead otherwise.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Browser connects directly</h3>
+        <p>The Monitor page opens a Server-Sent Events stream to <code>localhost:4242</code>. Data flows from your
+          machine straight to your browser tab. Nothing passes through any server.</p>
+      </div>
     </div>
 
-  </div>
-</section>
+    <div class="arch-diagram"><span class="t-muted">┌── aisentry.netlify.app ─────────┐ ┌── Your machine
+        ────────────────────────────┐
+        │ │ │ │
+        │ Static HTML / CSS / JS │ SSE │ ~/.aiguard/agent.js │
+        │ │◄────────┤ └─ listens on 127.0.0.1:4242 │
+        │ Browser renders the dashboard │ │ reads: ~/.claude/, ~/.gemini/, │
+        │ │ │ ~/.codex/, ps aux, lsof -i │
+        └────────────────────────────────────┘ │ streams events only when you're here │
+        └────────────────────────────────────────────┘
+        <span class="t-green">Data never leaves your machine</span></span></div>
+  </section>
 
-<!-- ── Privacy ───────────────────────────────────────────────────────────── -->
-<section class="privacy" id="privacy">
-  <div class="privacy-inner">
-    <div>
-      <div class="section-label">Privacy</div>
-      <h2>Your data goes nowhere.</h2>
-      <p>This site is a static file. There is no server, no database, no accounts. The agent runs on your machine and talks only to your browser.</p>
-      <p>The only outbound call the agent makes is a version check — fetching a small JSON file to see if there's an update. No conversation content or personal data is ever involved.</p>
+  <!-- ── Features ──────────────────────────────────────────────────────────── -->
+  <section class="features" id="features">
+    <div class="section-label">What it monitors</div>
+    <h2 class="section-title">Every AI coding tool on your machine.</h2>
+    <p class="section-sub">Six panels, one view. Refreshed in real time every 5 seconds.</p>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Session tracking</h3>
+        <p>Hourly session counts across Claude Code, Codex, and Gemini with a 24-hour timeline. Spot the exact moment a
+          daemon woke up and started burning quota.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔑</div>
+        <h3>Permission audit</h3>
+        <p>Every allow/deny rule in Claude settings, Codex config, and Cursor rules — rated by risk. Blanket wildcards,
+          full-auto modes, and model overrides flagged immediately.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>Network connections</h3>
+        <p>All outbound connections from AI agent processes. Anthropic, OpenAI, Google, and GitHub endpoints are
+          whitelisted — anything else is flagged for your review.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚙️</div>
+        <h3>Process monitor</h3>
+        <p>Live list of processes from all detected AI tools — PID, CPU, memory, and a risk label. Daemons, hook
+          scripts, and unknown workers are flagged separately.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🚨</div>
+        <h3>Automatic alerts</h3>
+        <p>Critical and high-risk findings bubble to the top of the dashboard without you having to dig. Session surges
+          trigger alerts too.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <h3>Update notifications</h3>
+        <p>The agent checks for new versions and surfaces a one-line update command in the browser — no need to remember
+          to update manually.</p>
+      </div>
     </div>
-    <div class="privacy-points">
-      <div class="privacy-point">
-        <span class="privacy-point-icon">✓</span>
-        <span class="privacy-point-text"><strong>Agent binds to 127.0.0.1 only</strong> — not reachable from other machines on your network</span>
+  </section>
+
+  <!-- ── About the agent ───────────────────────────────────────────────────── -->
+  <section id="about-agent" style="border-top:1px solid var(--border)">
+    <div class="section-label">About the agent</div>
+    <h2 class="section-title">Small, transparent, fully in your control.</h2>
+    <p class="section-sub">One Node.js file, no npm dependencies. Here's exactly what it costs and what it touches.</p>
+
+    <div class="agent-grid">
+
+      <div class="agent-card">
+        <h3>Resource footprint</h3>
+        <div class="fp-list">
+          <div class="fp-row"><span class="fp-l">Disk</span> <span class="fp-v">~15 KB</span> <span class="fp-n">single
+              file in <code>~/.aiguard/</code></span></div>
+          <div class="fp-row"><span class="fp-l">RAM</span> <span class="fp-v">35–50 MB</span> <span
+              class="fp-n">Node.js process baseline; no growth</span></div>
+          <div class="fp-row"><span class="fp-l">CPU idle</span> <span class="fp-v">&lt;0.1%</span> <span
+              class="fp-n">nothing happens when no browser is open</span></div>
+          <div class="fp-row"><span class="fp-l">CPU active</span><span class="fp-v">~1–2%</span> <span
+              class="fp-n">brief spike every 5 s when you're on the dashboard</span></div>
+          <div class="fp-row"><span class="fp-l">Port</span> <span class="fp-v">4242</span> <span class="fp-n">127.0.0.1
+              only — not reachable from the internet</span></div>
+          <div class="fp-row"><span class="fp-l">Log file</span> <span class="fp-v">grows</span> <span
+              class="fp-n"><code>~/.aiguard/agent.log</code> — delete anytime</span></div>
+          <div class="fp-row"><span class="fp-l">Outbound</span> <span class="fp-v">1 req/hr</span> <span
+              class="fp-n">version check to <code>/version.json</code> only</span></div>
+        </div>
       </div>
-      <div class="privacy-point">
-        <span class="privacy-point-icon">✓</span>
-        <span class="privacy-point-text"><strong>Session content is never read</strong> — only file size and timestamp for session counting</span>
+
+      <div class="agent-card">
+        <h3>What it reads (and doesn't)</h3>
+        <div class="reads-list">
+          <div class="ri yes"><span class="ri-icon">✓</span>
+            <div><strong>Session metadata</strong><span>File size + timestamp from <code>~/.claude/</code>,
+                <code>~/.gemini/</code>, <code>~/.codex/</code> — not the content</span></div>
+          </div>
+          <div class="ri yes"><span class="ri-icon">✓</span>
+            <div><strong>Settings files</strong><span><code>settings.json</code>, <code>config.json</code>,
+                <code>.cursor/settings.json</code> per project</span></div>
+          </div>
+          <div class="ri yes"><span class="ri-icon">✓</span>
+            <div><strong>Process list</strong><span><code>ps aux</code> — to find AI agent processes by name</span>
+            </div>
+          </div>
+          <div class="ri yes"><span class="ri-icon">✓</span>
+            <div><strong>Network connections</strong><span><code>lsof -i</code> scoped to AI agent PIDs only</span>
+            </div>
+          </div>
+          <div class="ri no"><span class="ri-icon">✗</span>
+            <div><strong>Session content</strong><span>Conversation text is never read — not even sampled</span></div>
+          </div>
+          <div class="ri no"><span class="ri-icon">✗</span>
+            <div><strong>API keys / secrets</strong><span>No access to <code>.env</code>, keychain, or credential
+                files</span></div>
+          </div>
+        </div>
       </div>
-      <div class="privacy-point">
-        <span class="privacy-point-icon">✓</span>
-        <span class="privacy-point-text"><strong>No tracking, no cookies, no analytics</strong> — the hosted site doesn't even know you visited</span>
+
+      <div class="agent-card">
+        <h3>You stay in control</h3>
+        <div class="ctrl-list">
+          <div class="ctrl-item">
+            <h4>Status</h4>
+            <code>as-status</code>
+          </div>
+          <div class="ctrl-item">
+            <h4>Tail logs</h4>
+            <code>as-log</code>
+          </div>
+          <div class="ctrl-item">
+            <h4>Stop</h4>
+            <code>as-stop</code>
+          </div>
+          <div class="ctrl-item">
+            <h4>Restart</h4>
+            <code>as-restart</code>
+          </div>
+          <div class="ctrl-item">
+            <h4>Update agent</h4>
+            <code>as-update</code>
+          </div>
+          <div class="ctrl-item">
+            <h4>Full uninstall</h4>
+            <code>as-stop &amp;&amp; rm -rf ~/.aiguard</code>
+          </div>
+        </div>
+        <p class="ctrl-note">The installer adds <code>as-*</code> aliases to your shell rc. The agent does
+          <strong>not</strong> auto-start after a reboot — run <code>as-start</code> or re-run the installer.</p>
       </div>
-      <div class="privacy-point">
-        <span class="privacy-point-icon">✓</span>
-        <span class="privacy-point-text"><strong>MIT licensed</strong> — read every line at <a href="https://github.com/eternalsayed/ai-monitor" target="_blank">github.com/eternalsayed/ai-monitor</a></span>
+
+    </div>
+  </section>
+
+  <!-- ── Privacy ───────────────────────────────────────────────────────────── -->
+  <section class="privacy" id="privacy">
+    <div class="privacy-inner">
+      <div>
+        <div class="section-label">Privacy</div>
+        <h2>Your data goes nowhere.</h2>
+        <p>This site is a static file. There is no server, no database, no accounts. The agent runs on your machine and
+          talks only to your browser.</p>
+        <p>The only outbound call the agent makes is a version check — fetching a small JSON file to see if there's an
+          update. No conversation content or personal data is ever involved.</p>
+      </div>
+      <div class="privacy-points">
+        <div class="privacy-point">
+          <span class="privacy-point-icon">✓</span>
+          <span class="privacy-point-text"><strong>Agent binds to 127.0.0.1 only</strong> — not reachable from other
+            machines on your network</span>
+        </div>
+        <div class="privacy-point">
+          <span class="privacy-point-icon">✓</span>
+          <span class="privacy-point-text"><strong>Session content is never read</strong> — only file size and timestamp
+            for session counting</span>
+        </div>
+        <div class="privacy-point">
+          <span class="privacy-point-icon">✓</span>
+          <span class="privacy-point-text"><strong>No tracking, no cookies, no analytics</strong> — the hosted site
+            doesn't even know you visited</span>
+        </div>
+        <div class="privacy-point">
+          <span class="privacy-point-icon">✓</span>
+          <span class="privacy-point-text"><strong>MIT licensed</strong> — read every line at <a
+              href="https://github.com/eternalsayed/ai-guard"
+              target="_blank">github.com/eternalsayed/ai-guard</a></span>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── CTA ───────────────────────────────────────────────────────────────── -->
-<section class="cta-band">
-  <h2>Start monitoring in 30 seconds.</h2>
-  <p>Run the installer, then open the Monitor page. That's it.</p>
-  <div class="cta-install">
-    <code id="cta-cmd">curl -fsSL <span id="cta-host"></span>/install.sh | bash</code>
-    <button class="cta-copy-btn" id="cta-copy-btn" onclick="ctaCopy()">Copy</button>
-  </div>
-  <div class="cta-or">or</div>
-  <a href="/monitor" class="btn-primary">Open Monitor →</a>
-</section>
+  <!-- ── CTA ───────────────────────────────────────────────────────────────── -->
+  <section class="cta-band">
+    <h2>Start monitoring in 30 seconds.</h2>
+    <p>Run the installer, then open the Monitor page. That's it.</p>
+    <div class="cta-install">
+      <code id="cta-cmd">curl -fsSL <span id="cta-host"></span>/install.sh | bash</code>
+      <button class="cta-copy-btn" id="cta-copy-btn" onclick="ctaCopy()">Copy</button>
+    </div>
+    <div class="cta-or">or</div>
+    <a href="/monitor" class="btn-primary">Open Monitor →</a>
+  </section>
 
-<!-- ── Footer ────────────────────────────────────────────────────────────── -->
-<footer>
-  <div class="footer-left"><span>AIGuard</span> — MIT License</div>
-  <div class="footer-links">
-    <a href="#how-it-works">How it works</a>
-    <a href="#features">Features</a>
-    <a href="#about-agent">The agent</a>
-    <a href="#privacy">Privacy</a>
-    <a href="https://github.com/eternalsayed/ai-monitor" target="_blank">GitHub</a>
-    <a href="/monitor">Monitor →</a>
-  </div>
-</footer>
+  <!-- ── Footer ────────────────────────────────────────────────────────────── -->
+  <footer>
+    <div class="footer-left"><span>AIGuard</span> — MIT License</div>
+    <div class="footer-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#about-agent">The agent</a>
+      <a href="#privacy">Privacy</a>
+      <a href="https://github.com/eternalsayed/ai-guard" target="_blank">GitHub</a>
+      <a href="/monitor">Monitor →</a>
+    </div>
+  </footer>
 
-<script>
-// __HOSTED_URL__ is replaced at build time by build.js.
-// Falls back to window.location.origin when running via a local dev server.
-const _raw = '__HOSTED_URL__';
-const SITE_URL = _raw.startsWith('__') ? window.location.origin : _raw;
-document.getElementById('cta-host').textContent = SITE_URL;
+  <script>
+    // __HOSTED_URL__ is replaced at build time by build.js.
+    // Falls back to window.location.origin when running via a local dev server.
+    const _raw = '__HOSTED_URL__';
+    const SITE_URL = _raw.startsWith('__') ? window.location.origin : _raw;
+    document.getElementById('cta-host').textContent = SITE_URL;
 
-function ctaCopy() {
-  const cmd = document.getElementById('cta-cmd').textContent;
-  const btn = document.getElementById('cta-copy-btn');
-  navigator.clipboard.writeText(cmd).then(() => {
-    btn.textContent = 'Copied!'; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
-  });
-}
-</script>
+    function ctaCopy() {
+      const cmd = document.getElementById('cta-cmd').textContent;
+      const btn = document.getElementById('cta-copy-btn');
+      navigator.clipboard.writeText(cmd).then(() => {
+        btn.textContent = 'Copied!'; btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+  </script>
 </body>
+
 </html>

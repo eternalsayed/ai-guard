@@ -36,7 +36,7 @@ The agent is a **single Node.js file (~15 KB)** with zero npm dependencies. Here
 **The agent does NOT auto-start after a reboot.** The installer runs it once for the current session. To start it again after a reboot, re-run the installer or manually start it:
 
 ```bash
-PORT=4242 AIGUARD_HOST=https://your-site.netlify.app \
+PORT=4242 AIGUARD_HOST=https://aisentry.netlify.app \
   nohup node ~/.aiguard/agent.js >> ~/.aiguard/agent.log 2>&1 &
 ```
 
@@ -84,7 +84,7 @@ rm ~/.config/systemd/user/aiguard.service
 ## How it works
 
 ```
-┌── your-site.netlify.app ───────────┐         ┌── Your machine ────────────────────────────┐
+┌── aisentry.netlify.app ───────────┐         ┌── Your machine ────────────────────────────┐
 │                                    │         │                                            │
 │  Static HTML / CSS / JS            │   SSE   │  ~/.aiguard/agent.js                   │
 │                                    │◄────────┤  └─ listens on 127.0.0.1:4242            │
@@ -101,7 +101,7 @@ rm ~/.config/systemd/user/aiguard.service
 Visit your deployed site and follow the on-screen instructions, or run the installer directly:
 
 ```bash
-curl -fsSL https://your-site.netlify.app/install.sh | bash
+curl -fsSL https://aisentry.netlify.app/install.sh | bash
 ```
 
 Then open `/monitor` — it detects the agent automatically and connects.
@@ -120,7 +120,7 @@ Open **http://localhost:8080/monitor.html**. The browser auto-connects once the 
 ### Build & preview
 
 ```bash
-cp .env.example .env  # set HOSTED_URL=https://your-site.netlify.app
+cp .env.example .env  # set HOSTED_URL=https://aisentry.netlify.app
 npm run build         # copies public/ → dist/, injects HOSTED_URL
 npm run preview       # builds + serves dist/ on :8080
 ```
