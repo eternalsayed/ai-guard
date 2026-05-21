@@ -1098,13 +1098,10 @@
       el.style.display = name === 'dashboard' ? 'block' : '';
 
       const pill = document.getElementById('nav-conn-pill');
-      const dot = document.getElementById('mnav-dot');
       if (name === 'dashboard') {
         pill.style.display = 'flex';
-        dot.classList.add('live');
       } else {
         pill.style.display = 'none';
-        dot.classList.remove('live');
       }
     }
 
