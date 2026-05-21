@@ -5,11 +5,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Monitor — AISentry</title>
+  <meta name="description" content="Real-time dashboard monitoring AI coding agents on your machine — sessions, permissions, processes, and network connections.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
 
-  <!-- Analytics: swap in your preferred privacy-respecting provider -->
-  <!-- Plausible: <script defer data-domain="yourdomain.com" src="https://plausible.io/js/script.js"></script> -->
-  <!-- Fathom:    <script src="https://cdn.usefathom.com/script.js" data-site="XXXXXXXX" defer></script>   -->
-  <!-- Umami:     <script async src="https://analytics.umami.is/script.js" data-website-id="..."></script>  -->
+  <!-- Google Analytics (disabled when GTAG_ID is not set) -->
+  <script>
+    (function () {
+      var id = '__GTAG_ID__';
+      if (!id || id.startsWith('__')) return;
+      var s = document.createElement('script');
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+      s.async = true;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', id, { page_title: 'Monitor' });
+      window._gtag = gtag;
+    })();
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
@@ -679,6 +694,79 @@
       font-size: 11px;
     }
 
+    /* ── Sparkline ───────────────────────────────────────────────────────── */
+    .sparkline-wrap {
+      margin-top: 10px;
+      height: 28px;
+    }
+
+    /* ── Proc dot ────────────────────────────────────────────────────────── */
+    .proc-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    /* ── Alerts panel ────────────────────────────────────────────────────── */
+    #alerts-panel {
+      display: none;
+      margin-bottom: 16px;
+    }
+
+    #alerts-panel.show {
+      display: block;
+    }
+
+    .alert-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border-radius: 7px;
+      background: rgba(248,81,73,.07);
+      border: 1px solid rgba(248,81,73,.18);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .alert-row:last-child { margin-bottom: 0; }
+
+    .alert-row.sev-high {
+      background: rgba(240,136,62,.07);
+      border-color: rgba(240,136,62,.2);
+    }
+
+    .alert-row.sev-medium {
+      background: rgba(210,153,34,.07);
+      border-color: rgba(210,153,34,.2);
+    }
+
+    .alert-row .al-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      flex-shrink: 0;
+    }
+
+    .alert-row.sev-critical .al-badge { background: rgba(248,81,73,.2); color: var(--red); }
+    .alert-row.sev-high     .al-badge { background: rgba(240,136,62,.2); color: var(--orange); }
+    .alert-row.sev-medium   .al-badge { background: rgba(210,153,34,.2); color: var(--yellow); }
+
+    .al-source {
+      margin-left: auto;
+      color: #484f58;
+      font-size: 11px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
     #last-updated {
       color: var(--muted);
       font-size: 12px;
@@ -702,7 +790,7 @@
   <!-- ── Shared nav ───────────────────────────────────────────────────────── -->
   <nav class="monitor-nav">
     <a href="/" class="mnav-logo">
-      <span class="mnav-dot" id="mnav-dot"></span>
+      <img src="/logo.svg" width="22" height="22" alt="AISentry logo" style="border-radius:4px">
       AISentry
     </a>
     <div class="mnav-right">
@@ -781,7 +869,7 @@
           <div><strong style="color:var(--text)">Never sends:</strong> any data externally — one outbound call is a
             version check to <code>/version.json</code></div>
           <div><strong style="color:var(--text)">Uninstall:</strong>
-            <code>kill $(cat ~/.AISentry/agent.pid) &amp;&amp; rm -rf ~/.AISentry</code>
+            <code>kill $(cat ~/.aisentry/agent.pid) &amp;&amp; rm -rf ~/.AISentry</code>
           </div>
         </div>
       </details>
@@ -825,7 +913,7 @@
     <div class="install-card" style="margin-top:4px">
       <h3>Manual restart</h3>
       <div class="cmd-box">
-        <code>PORT=4242 nohup node ~/.AISentry/agent.js &gt;&gt; ~/.AISentry/agent.log 2&gt;&amp;1 &amp;</code>
+        <code>PORT=4242 nohup node ~/.aisentry/agent.js &gt;&gt; ~/.aisentry/agent.log 2&gt;&amp;1 &amp;</code>
         <button class="copy-btn" id="btn-manual-restart" onclick="copyRestart()">Copy</button>
       </div>
     </div>
@@ -856,15 +944,14 @@
         <span>Agent update available → <code id="update-cmd"></code></span>
       </div>
 
-      <div class="alert-strip" id="alert-strip">
-        <strong>⚠ Alerts:</strong>&nbsp;<span id="alert-text"></span>
-      </div>
+      <div id="alerts-panel"></div>
 
       <div class="stats-row">
         <div class="stat-card" id="card-sessions">
           <div class="label">Sessions today</div>
           <div class="value" id="stat-sessions">—</div>
           <div class="sub" id="stat-sessions-sub">—</div>
+          <div class="sparkline-wrap"><canvas id="chart-sparkline"></canvas></div>
         </div>
         <div class="stat-card" id="card-hour">
           <div class="label">This hour</div>
@@ -877,7 +964,7 @@
           <div class="sub">MB sent to Anthropic API</div>
         </div>
         <div class="stat-card" id="card-procs">
-          <div class="label">Claude processes</div>
+          <div class="label">Active processes</div>
           <div class="value" id="stat-procs">—</div>
           <div class="sub" id="stat-procs-sub">—</div>
         </div>
@@ -992,7 +1079,7 @@
     let sse = null;
     let pollTimer = null;
     let agentConnected = false;
-    let chartTimeline, chartProjects, chartRisk;
+    let chartTimeline, chartProjects, chartRisk, chartSparkline;
 
     // Was this agent ever seen on this browser?
     const wasSeen = () => localStorage.getItem(LS_KEY) === '1';
@@ -1074,7 +1161,7 @@
     function connectSSE() {
       if (sse) { sse.close(); sse = null; }
       sse = new EventSource(`${AGENT_ORIGIN}/events`);
-      sse.onopen = () => { agentConnected = true; setPill('live', 'live'); };
+      sse.onopen = () => { agentConnected = true; setPill('live', 'live'); if (window._gtag) window._gtag('event', 'agent_connect'); };
       sse.onmessage = (e) => {
         try {
           const data = JSON.parse(e.data);
@@ -1102,14 +1189,15 @@
     }
 
     // ── Copy helpers ───────────────────────────────────────────────────────────────
-    function copyInstall() { copyText(document.getElementById('install-cmd').textContent, document.querySelector('#screen-install .copy-btn')); }
-    function copyRestart() { copyText(`PORT=4242 nohup node ~/.AISentry/agent.js >> ~/.AISentry/agent.log 2>&1 &`, document.getElementById('btn-manual-restart')); }
-    function copyReinstall() { copyText(document.getElementById('reinstall-cmd').textContent, document.getElementById('btn-reinstall')); }
+    function copyInstall()   { copyText(document.getElementById('install-cmd').textContent, document.querySelector('#screen-install .copy-btn'), 'install'); }
+    function copyRestart()   { copyText(`PORT=4242 nohup node ~/.aisentry/agent.js >> ~/.aisentry/agent.log 2>&1 &`, document.getElementById('btn-manual-restart'), 'restart'); }
+    function copyReinstall() { copyText(document.getElementById('reinstall-cmd').textContent, document.getElementById('btn-reinstall'), 'reinstall'); }
 
-    function copyText(text, btn) {
+    function copyText(text, btn, action) {
       navigator.clipboard.writeText(text).then(() => {
         const orig = btn.textContent; btn.textContent = 'Copied!'; btn.classList.add('copied');
         setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+        if (window._gtag) window._gtag('event', 'install_copy', { action: action || 'copy' });
       });
     }
 
@@ -1118,6 +1206,16 @@
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1c2128', titleColor: '#e6edf3', bodyColor: '#8b949e', borderColor: '#30363d', borderWidth: 1 } },
     };
+
+    function mkSparkline(data) {
+      const ctx = document.getElementById('chart-sparkline').getContext('2d');
+      if (chartSparkline) chartSparkline.destroy();
+      chartSparkline = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: data.map(() => ''), datasets: [{ data, backgroundColor: data.map((v, i) => i >= data.length - 3 ? 'rgba(88,166,255,.65)' : 'rgba(88,166,255,.25)'), borderRadius: 2, borderSkipped: false }] },
+        options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, beginAtZero: true } } },
+      });
+    }
 
     function mkTimeline(labels, data) {
       const ctx = document.getElementById('chart-timeline').getContext('2d');
@@ -1190,7 +1288,9 @@
     }
 
     function renderTimeline(buckets) {
-      mkTimeline(buckets.map(b => b.label), buckets.map(b => b.count));
+      const counts = buckets.map(b => b.count);
+      mkTimeline(buckets.map(b => b.label), counts);
+      mkSparkline(counts.slice(-12));
       el('badge-timeline').textContent = buckets.reduce((a, b) => a + b.count, 0) + ' total';
     }
 
@@ -1237,14 +1337,15 @@
       el('badge-net').textContent = f ? `${f} flagged` : `${net.length} connections`;
     }
 
+    const RISK_DOT = { critical: '#f85149', high: '#f0883e', medium: '#d29922', low: '#58a6ff', ok: '#3fb950' };
     function renderProcesses(procs) {
       const tbody = el('table-procs');
-      if (!procs.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty">No claude processes found</td></tr>`; return; }
-      [...procs].sort((a, b) => ({ high: 0, medium: 1, ok: 2 }[a.risk] ?? 3) - ({ high: 0, medium: 1, ok: 2 }[b.risk] ?? 3));
-      tbody.innerHTML = procs.map(p => `
+      if (!procs.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty">No AI agent processes found</td></tr>`; return; }
+      const sorted = [...procs].sort((a, b) => (['critical','high','medium','low','ok'].indexOf(a.risk)) - (['critical','high','medium','low','ok'].indexOf(b.risk)));
+      tbody.innerHTML = sorted.map(p => `
     <tr title="${esc(p.cmd)}">
       <td class="mono" style="color:var(--muted)">${esc(p.pid)}</td>
-      <td>${esc(p.label)}</td>
+      <td><span class="proc-dot" style="background:${RISK_DOT[p.risk]||'#8b949e'}"></span>${esc(p.label)}</td>
       <td style="color:${p.cpu > 10 ? 'var(--orange)' : 'var(--muted)'}">${p.cpu.toFixed(1)}</td>
       <td style="color:var(--muted)">${p.mem.toFixed(1)}</td>
       <td>${badge(p.risk)}</td>
@@ -1264,17 +1365,31 @@
     }
 
     function renderAlerts(d) {
-      const alerts = [];
-      const ch = (d.permissions || []).filter(p => ['critical', 'high'].includes(p.risk)).length;
-      const bp = (d.processes || []).filter(p => p.risk === 'high').length;
-      const bn = (d.network || []).filter(n => n.risk === 'high').length;
-      if (ch) alerts.push(`${ch} critical/high permission rule${ch > 1 ? 's' : ''}`);
-      if (bp) alerts.push(`${bp} high-risk process${bp > 1 ? 'es' : ''} running`);
-      if (bn) alerts.push(`${bn} unknown outbound connection${bn > 1 ? 's' : ''}`);
-      if ((d.stats?.sessionsThisHour || 0) > 15) alerts.push(`Surge: ${d.stats.sessionsThisHour} sessions in the last hour`);
-      const strip = el('alert-strip');
-      if (alerts.length) { el('alert-text').textContent = alerts.join('  ·  '); strip.classList.add('show'); }
-      else strip.classList.remove('show');
+      const rows = [];
+      (d.permissions || []).filter(p => ['critical','high'].includes(p.risk)).forEach(p => {
+        rows.push({ sev: p.risk, label: p.risk, text: p.rule, source: p.project });
+      });
+      (d.processes || []).filter(p => p.risk === 'high').forEach(p => {
+        rows.push({ sev: 'high', label: 'high', text: `Background process (PID ${p.pid}) · ${p.cpu.toFixed(1)}% CPU`, source: p.label });
+      });
+      (d.network || []).filter(n => ['high','medium'].includes(n.risk)).forEach(n => {
+        rows.push({ sev: n.risk, label: n.risk, text: `Unknown connection → ${n.dest}`, source: n.proc });
+      });
+      if ((d.stats?.sessionsThisHour || 0) > 15)
+        rows.push({ sev: 'medium', label: 'surge', text: `${d.stats.sessionsThisHour} sessions in the last hour`, source: 'sessions' });
+
+      const panel = el('alerts-panel');
+      if (!rows.length) { panel.className = ''; panel.innerHTML = ''; return; }
+      panel.className = 'show';
+      panel.innerHTML = rows.map(r => `
+        <div class="alert-row sev-${esc(r.sev)}">
+          <span class="al-badge">${esc(r.label)}</span>
+          <span style="color:var(--muted);font-size:12px">${esc(r.text)}</span>
+          <span class="al-source">${esc(r.source)}</span>
+        </div>`).join('');
+
+      if (window._gtag && rows.some(r => r.sev === 'critical' || r.sev === 'high'))
+        window._gtag('event', 'high_risk_alert', { alert_count: rows.length });
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────────

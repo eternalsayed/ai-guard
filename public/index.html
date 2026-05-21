@@ -5,13 +5,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AISentry — Monitor every AI coding agent on your machine</title>
-  <meta name="description"
-    content="Real-time monitoring for Claude Code, Codex, Gemini CLI, Aider, and more. Surfaces rogue permissions, background daemons, and unexpected network connections — entirely on your machine.">
+  <meta name="description" content="Real-time monitoring for Claude Code, Codex, Gemini CLI, Aider, and more. Surfaces rogue permissions, background daemons, and unexpected network connections — entirely on your machine.">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="AISentry">
+  <link rel="canonical" href="__HOSTED_URL__/">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
 
-  <!-- Analytics: swap in your preferred privacy-respecting provider -->
-  <!-- Plausible: <script defer data-domain="yourdomain.com" src="https://plausible.io/js/script.js"></script> -->
-  <!-- Fathom:    <script src="https://cdn.usefathom.com/script.js" data-site="XXXXXXXX" defer></script>   -->
-  <!-- Umami:     <script async src="https://analytics.umami.is/script.js" data-website-id="..."></script>  -->
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="__HOSTED_URL__/">
+  <meta property="og:site_name" content="AISentry">
+  <meta property="og:title" content="AISentry — Monitor every AI coding agent on your machine">
+  <meta property="og:description" content="Real-time monitoring for Claude Code, Codex, Gemini CLI, Aider, and more. Surfaces rogue permissions, background daemons, and unexpected network connections — entirely on your machine.">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="AISentry — Monitor every AI coding agent">
+  <meta name="twitter:description" content="Surfaces rogue permissions, background daemons, and unexpected network connections from AI coding tools — entirely on your machine.">
+
+  <!-- Google Analytics (disabled when GTAG_ID is not set) -->
+  <script>
+    (function () {
+      var id = '__GTAG_ID__';
+      if (!id || id.startsWith('__')) return;
+      var s = document.createElement('script');
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+      s.async = true;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', id);
+      window._gtag = gtag;
+    })();
+  </script>
   <style>
     *,
     *::before,
@@ -1123,7 +1150,7 @@
   <!-- ── Nav ──────────────────────────────────────────────────────────────── -->
   <nav>
     <a href="/" class="nav-logo" style="text-decoration:none">
-      <span class="nav-logo-dot"></span>
+      <img src="/logo.svg" width="24" height="24" alt="AISentry logo" style="border-radius:5px">
       AISentry
     </a>
     <div class="nav-links">
@@ -1639,6 +1666,7 @@
       navigator.clipboard.writeText(cmd).then(() => {
         btn.textContent = 'Copied!'; btn.classList.add('copied');
         setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        if (window._gtag) window._gtag('event', 'install_copy', { action: 'cta' });
       });
     }
   </script>

@@ -34,7 +34,8 @@ if (!HOSTED_URL) {
   console.error("  Or in Netlify → Site settings → Environment variables.\n");
   process.exit(1);
 }
-console.log(`\n  Building with HOSTED_URL=${HOSTED_URL}\n`);
+const GTAG_ID = (process.env.GTAG_ID || "").trim();
+console.log(`\n  Building with HOSTED_URL=${HOSTED_URL}${GTAG_ID ? `  GTAG_ID=${GTAG_ID}` : "  GTAG_ID=(not set — GA disabled)"}\n`);
 
 // ── Copy + replace ────────────────────────────────────────────────────────────
 const SRC = path.join(__dirname, "public");
@@ -62,7 +63,9 @@ function copy(src, dst) {
     }
     const raw = fs.readFileSync(sp);
     if (TEXT_EXTS.has(path.extname(entry))) {
-      const out = raw.toString("utf8").replace(/__HOSTED_URL__/g, HOSTED_URL);
+      const out = raw.toString("utf8")
+        .replace(/__HOSTED_URL__/g, HOSTED_URL)
+        .replace(/__GTAG_ID__/g, GTAG_ID);
       fs.writeFileSync(dp, out, "utf8");
       const changed =
         out.includes(HOSTED_URL) &&
