@@ -497,18 +497,248 @@
       font-size: 12px;
     }
 
-    .arch-diagram {
+    .arch-svg-wrap {
+      margin-top: 56px;
+    }
+
+    .arch-svg-wrap svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* ── Dashboard preview ───────────────────────────────────────────── */
+    .preview-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 80px 32px;
+    }
+
+    .preview-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .preview-frame {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,.6);
+      margin-top: 48px;
+    }
+
+    .pf-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 46px;
+      background: rgba(22,27,34,.96);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pf-logo {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .pf-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 5px var(--green);
+    }
+
+    .pf-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--green);
+      border: 1px solid rgba(63,185,80,.3);
+      border-radius: 20px;
+      padding: 2px 9px;
+    }
+
+    .pf-pill-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    .pf-body {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto auto;
+      gap: 14px;
+    }
+
+    .pf-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
-      font-family: 'SF Mono', Menlo, monospace;
-      font-size: 13px;
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+
+    .pf-card-title {
+      font-size: 11px;
+      font-weight: 600;
       color: var(--muted);
-      line-height: 2;
-      margin-top: 48px;
-      white-space: pre;
-      overflow-x: auto;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 14px;
+    }
+
+    .pf-stat {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .pf-stat-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pf-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 40px;
+      margin-top: 12px;
+    }
+
+    .pf-bar-col {
+      flex: 1;
+      background: rgba(88,166,255,.25);
+      border-radius: 3px 3px 0 0;
+      position: relative;
+    }
+
+    .pf-bar-col.hi { background: rgba(88,166,255,.55); }
+
+    .pf-process {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(48,54,61,.6);
+      font-size: 12px;
+    }
+
+    .pf-process:last-child { border-bottom: none; }
+
+    .pf-proc-name {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .pf-proc-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .pf-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .badge-ok     { background: rgba(63,185,80,.15);  color: var(--green);  }
+    .badge-low    { background: rgba(88,166,255,.15); color: var(--blue);   }
+    .badge-medium { background: rgba(240,136,62,.15); color: var(--orange); }
+    .badge-high   { background: rgba(248,81,73,.15);  color: var(--red);    }
+    .badge-crit   { background: rgba(248,81,73,.3);   color: var(--red);    border: 1px solid rgba(248,81,73,.5); }
+
+    .pf-perm {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(48,54,61,.6);
+      font-size: 11px;
+    }
+
+    .pf-perm:last-child { border-bottom: none; }
+
+    .pf-perm-rule {
+      color: var(--muted);
+      font-family: 'SF Mono', Menlo, monospace;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pf-net {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(48,54,61,.6);
+      font-size: 11px;
+    }
+
+    .pf-net:last-child { border-bottom: none; }
+
+    .pf-net-host {
+      font-family: 'SF Mono', Menlo, monospace;
+      color: var(--muted);
+    }
+
+    .pf-wide {
+      grid-column: span 3;
+    }
+
+    .pf-alert-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 7px;
+      background: rgba(248,81,73,.08);
+      border: 1px solid rgba(248,81,73,.2);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .pf-alert-row:last-child { margin-bottom: 0; }
+
+    .pf-alert-label {
+      font-weight: 700;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 760px) {
+      .pf-body { grid-template-columns: 1fr 1fr; }
+      .pf-wide { grid-column: span 2; }
+    }
+
+    @media (max-width: 500px) {
+      .pf-body { grid-template-columns: 1fr; }
+      .pf-wide { grid-column: span 1; }
     }
 
     /* ── Features ────────────────────────────────────────────────────── */
@@ -962,6 +1192,129 @@
     </div>
   </section>
 
+  <!-- ── Dashboard preview ────────────────────────────────────────────────── -->
+  <div class="preview-section">
+    <div class="preview-inner">
+      <div class="section-label" style="text-align:center">Live dashboard</div>
+      <h2 class="section-title" style="text-align:center">See what's running right now.</h2>
+      <p class="section-sub" style="text-align:center;margin:0 auto">A real-time view of every AI agent active on your machine — sessions, permissions, processes, and network in one place.</p>
+
+      <div class="preview-frame">
+        <!-- Mock nav -->
+        <div class="pf-bar">
+          <div class="pf-logo">
+            <span class="pf-dot"></span>
+            AISentry
+          </div>
+          <div class="pf-pill">
+            <span class="pf-pill-dot"></span>
+            Live · 127.0.0.1:4242
+          </div>
+        </div>
+
+        <!-- Mock dashboard body -->
+        <div class="pf-body">
+
+          <!-- Sessions card -->
+          <div class="pf-card">
+            <div class="pf-card-title">Sessions today</div>
+            <div class="pf-stat">247</div>
+            <div class="pf-stat-sub">+31 this hour &nbsp;·&nbsp; 4 projects</div>
+            <div class="pf-bars">
+              <div class="pf-bar-col" style="height:30%"></div>
+              <div class="pf-bar-col" style="height:45%"></div>
+              <div class="pf-bar-col" style="height:35%"></div>
+              <div class="pf-bar-col" style="height:60%"></div>
+              <div class="pf-bar-col" style="height:50%"></div>
+              <div class="pf-bar-col" style="height:75%"></div>
+              <div class="pf-bar-col" style="height:55%"></div>
+              <div class="pf-bar-col" style="height:80%"></div>
+              <div class="pf-bar-col hi" style="height:95%"></div>
+              <div class="pf-bar-col hi" style="height:100%"></div>
+              <div class="pf-bar-col hi" style="height:88%"></div>
+              <div class="pf-bar-col" style="height:40%"></div>
+            </div>
+          </div>
+
+          <!-- Active processes card -->
+          <div class="pf-card">
+            <div class="pf-card-title">Active processes</div>
+            <div class="pf-process">
+              <div class="pf-proc-name">
+                <span class="pf-proc-dot" style="background:var(--green)"></span>
+                claude
+              </div>
+              <span class="pf-badge badge-ok">ok</span>
+            </div>
+            <div class="pf-process">
+              <div class="pf-proc-name">
+                <span class="pf-proc-dot" style="background:var(--green)"></span>
+                codex
+              </div>
+              <span class="pf-badge badge-ok">ok</span>
+            </div>
+            <div class="pf-process">
+              <div class="pf-proc-name">
+                <span class="pf-proc-dot" style="background:var(--red)"></span>
+                claude-flow
+              </div>
+              <span class="pf-badge badge-high">high</span>
+            </div>
+            <div class="pf-process">
+              <div class="pf-proc-name">
+                <span class="pf-proc-dot" style="background:var(--orange)"></span>
+                gemini
+              </div>
+              <span class="pf-badge badge-medium">medium</span>
+            </div>
+          </div>
+
+          <!-- Network card -->
+          <div class="pf-card">
+            <div class="pf-card-title">Network connections</div>
+            <div class="pf-net">
+              <span class="pf-net-host">api.anthropic.com</span>
+              <span class="pf-badge badge-ok">ok</span>
+            </div>
+            <div class="pf-net">
+              <span class="pf-net-host">api.openai.com</span>
+              <span class="pf-badge badge-ok">ok</span>
+            </div>
+            <div class="pf-net">
+              <span class="pf-net-host">generativelanguage.googleapis.com</span>
+              <span class="pf-badge badge-ok">ok</span>
+            </div>
+            <div class="pf-net">
+              <span class="pf-net-host">45.79.88.12:443</span>
+              <span class="pf-badge badge-high">unknown</span>
+            </div>
+          </div>
+
+          <!-- Alerts card (full width) -->
+          <div class="pf-card pf-wide">
+            <div class="pf-card-title">Active alerts</div>
+            <div class="pf-alert-row">
+              <span class="pf-alert-label" style="background:rgba(248,81,73,.2);color:var(--red)">Critical</span>
+              <span style="color:var(--muted);font-family:'SF Mono',Menlo,monospace;font-size:11px">Bash(node .claude/*)</span>
+              <span style="color:#484f58;font-size:11px;margin-left:auto">vue-app/ · claude-flow</span>
+            </div>
+            <div class="pf-alert-row" style="background:rgba(240,136,62,.06);border-color:rgba(240,136,62,.2)">
+              <span class="pf-alert-label" style="background:rgba(240,136,62,.2);color:var(--orange)">High</span>
+              <span style="color:var(--muted);font-size:12px">Background daemon — PID 34010 · 9d uptime</span>
+              <span style="color:#484f58;font-size:11px;margin-left:auto">claude-flow</span>
+            </div>
+            <div class="pf-alert-row" style="background:rgba(240,136,62,.06);border-color:rgba(240,136,62,.2)">
+              <span class="pf-alert-label" style="background:rgba(240,136,62,.2);color:var(--orange)">High</span>
+              <span style="color:var(--muted);font-size:12px">Unknown outbound connection · 45.79.88.12:443</span>
+              <span style="color:#484f58;font-size:11px;margin-left:auto">claude-flow</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Problem ───────────────────────────────────────────────────────────── -->
   <section class="problem" id="problem">
     <div class="problem-grid">
@@ -1034,16 +1387,43 @@
       </div>
     </div>
 
-    <div class="arch-diagram"><span class="t-muted">┌── aisentry.netlify.app ─────────┐ ┌── Your machine
-        ────────────────────────────┐
-        │ │ │ │
-        │ Static HTML / CSS / JS │ SSE │ ~/.aisentry/agent.js │
-        │ │◄────────┤ └─ listens on 127.0.0.1:4242 │
-        │ Browser renders the dashboard │ │ reads: ~/.claude/, ~/.gemini/, │
-        │ │ │ ~/.codex/, ps aux, lsof -i │
-        └────────────────────────────────────┘ │ streams events only when you're here │
-        └────────────────────────────────────────────┘
-        <span class="t-green">Data never leaves your machine</span></span></div>
+    <div class="arch-svg-wrap">
+      <svg viewBox="0 0 860 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Architecture diagram: browser connects via SSE to local agent">
+        <rect width="860" height="240" rx="12" fill="#161b22" stroke="#30363d"/>
+
+        <!-- Left box: Netlify/browser -->
+        <rect x="28" y="32" width="300" height="176" rx="8" fill="#0d1117" stroke="#30363d"/>
+        <text x="178" y="60" text-anchor="middle" font-family="'SF Mono',Menlo,monospace" font-size="11" fill="#58a6ff" font-weight="600">aisentry.netlify.app</text>
+        <line x1="28" y1="70" x2="328" y2="70" stroke="#30363d"/>
+
+        <text x="178" y="104" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="12" fill="#8b949e">Static HTML / CSS / JS</text>
+        <text x="178" y="126" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="12" fill="#8b949e">No server. No database.</text>
+        <rect x="60" y="144" width="236" height="36" rx="6" fill="#161b22" stroke="#30363d"/>
+        <text x="178" y="167" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="12" fill="#e6edf3">Browser renders dashboard</text>
+
+        <!-- Right box: local machine -->
+        <rect x="532" y="32" width="300" height="176" rx="8" fill="#0d1117" stroke="#30363d"/>
+        <text x="682" y="60" text-anchor="middle" font-family="'SF Mono',Menlo,monospace" font-size="11" fill="#3fb950" font-weight="600">Your machine</text>
+        <line x1="532" y1="70" x2="832" y2="70" stroke="#30363d"/>
+
+        <text x="682" y="98" text-anchor="middle" font-family="'SF Mono',Menlo,monospace" font-size="11" fill="#8b949e">~/.aisentry/agent.js</text>
+        <text x="682" y="118" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="11" fill="#484f58">listening on 127.0.0.1:4242</text>
+        <text x="682" y="144" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="11" fill="#8b949e">reads: ~/.claude/  ~/.gemini/  ~/.codex/</text>
+        <text x="682" y="162" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="11" fill="#8b949e">ps aux · lsof -i</text>
+        <rect x="572" y="176" width="220" height="20" rx="4" fill="#161b22" stroke="#30363d"/>
+        <text x="682" y="190" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="11" fill="#484f58">streams only when browser is open</text>
+
+        <!-- SSE arrow right→left -->
+        <line x1="530" y1="120" x2="330" y2="120" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <polygon points="330,120 342,114 342,126" fill="#58a6ff"/>
+        <rect x="396" y="106" width="68" height="20" rx="4" fill="#161b22" stroke="#30363d"/>
+        <text x="430" y="120" text-anchor="middle" font-family="'SF Mono',Menlo,monospace" font-size="11" fill="#58a6ff" font-weight="600">SSE</text>
+
+        <!-- Footer -->
+        <circle cx="350" cy="216" r="4" fill="#3fb950"/>
+        <text x="362" y="220" font-family="-apple-system,sans-serif" font-size="12" fill="#3fb950">Data never leaves your machine</text>
+      </svg>
+    </div>
   </section>
 
   <!-- ── Features ──────────────────────────────────────────────────────────── -->
